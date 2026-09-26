@@ -7,6 +7,7 @@ import AccountMenu from "../../components/AccountMenu";
 import Button from "../../components/Button";
 import StatusBadge from "../../components/StatusBadge";
 import Tooltip from "../../components/Tooltip";
+import GitHubButton from "../github/GitHubButton";
 import ProjectNameEditor from "./ProjectNameEditor";
 import ViewModeToggle from "./ViewModeToggle";
 
@@ -29,6 +30,7 @@ export default function WorkspaceHeader({ project }: { project: Project }) {
         <StatusBadge status={project.status} />
       </div>
       <ViewModeToggle project={project} />
+      <GitHubButton project={project} />
       <Tooltip
         label={
           project.status === "ready"
