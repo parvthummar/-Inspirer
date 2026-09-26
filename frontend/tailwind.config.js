@@ -6,19 +6,28 @@ export default {
     colors: {
       transparent: "transparent",
       current: "currentColor",
-      surface: "var(--surface)",
-      panel: "var(--panel)",
-      ink: "var(--ink)",
-      muted: "var(--muted)",
-      line: "var(--line)",
-      accent: "var(--accent)",
-      danger: "var(--danger)",
-      success: "var(--success)",
+      surface: "rgb(var(--surface-rgb) / <alpha-value>)",
+      panel: "rgb(var(--panel-rgb) / <alpha-value>)",
+      ink: "rgb(var(--ink-rgb) / <alpha-value>)",
+      muted: "rgb(var(--muted-rgb) / <alpha-value>)",
+      line: "rgb(var(--line-rgb) / <alpha-value>)",
+      accent: "rgb(var(--accent-rgb) / <alpha-value>)",
+      danger: "rgb(var(--danger-rgb) / <alpha-value>)",
+      success: "rgb(var(--success-rgb) / <alpha-value>)",
     },
     extend: {
       fontFamily: {
         sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],
+      },
+      keyframes: {
+        "toast-in": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "toast-in": "toast-in 180ms ease-out",
       },
     },
   },

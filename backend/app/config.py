@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = ""
     frontend_origin: str = "http://localhost:5173"
+    # Set to true in production, where frontend and backend live on different domains
+    # and the auth cookie must be sent cross-site (SameSite=None requires Secure).
+    cookie_secure: bool = False
 
 
 @lru_cache

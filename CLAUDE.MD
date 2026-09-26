@@ -261,4 +261,7 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
 ## Progress
 
 - [x] Phase 1, step 1: repo setup (Docker Postgres 16, FastAPI skeleton with `/api/health`, Alembic wired to settings, Vite React 18 + TS, Tailwind with design tokens)
-- [ ] Phase 1, step 2: database models and first Alembic migration
+- [x] Phase 1, step 2: database models (users, projects, messages, plans) and first Alembic migration `ae4e01685453`
+- [x] Phase 1, step 3: email/password auth (JWT in httpOnly cookie `architect_session`, 7 days), login/signup pages, protected routes, account menu with log out
+- [x] Phase 1, step 4: dashboard (prompt box, project grid with delete, starter templates, dummy import modal for GitHub/zip/other platform). Project name is drafted from the prompt until OpenAI names it in step 6.
+- [ ] Phase 1, step 5: workspace layout with chat panel and preview panel
