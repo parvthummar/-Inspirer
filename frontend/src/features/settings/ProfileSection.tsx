@@ -3,6 +3,7 @@ import { useChangePassword, useUpdateProfile, type User } from "../../api/auth";
 import Alert from "../../components/Alert";
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
+import ThemeSwitcher from "../../components/ThemeSwitcher";
 import { useToast } from "../../components/toast-context";
 import SettingsCard from "./SettingsCard";
 
@@ -63,6 +64,12 @@ export default function ProfileSection({ user }: { user: User }) {
           )}
         </SettingsCard>
       </form>
+
+      <SettingsCard title="Appearance" description="Choose light or dark, or follow your computer's setting.">
+        <div className="max-w-sm">
+          <ThemeSwitcher />
+        </div>
+      </SettingsCard>
 
       {!user.has_password ? (
         <SettingsCard title="Password" description="You sign in with Google, so there's no password to manage here.">

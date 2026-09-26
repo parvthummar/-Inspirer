@@ -159,7 +159,7 @@ export default function AgentPlayground({ agents, initialAgentId, developer, onC
             type="submit"
             disabled={!draft.trim() || running}
             aria-label="Send test message"
-            className="mb-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-panel disabled:bg-line disabled:text-muted"
+            className="mb-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-on-accent disabled:bg-line disabled:text-muted"
           >
             <ArrowUp className="h-4 w-4" aria-hidden />
           </button>

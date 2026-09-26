@@ -82,7 +82,7 @@ export default function MyLeaveView({ requests, onRequest, compact }: MyLeaveVie
           </label>
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-muted">{days ? `${days} working ${days === 1 ? "day" : "days"}` : "Pick valid dates"}</span>
-            <button type="submit" disabled={!days} className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-panel disabled:opacity-50">
+            <button type="submit" disabled={!days} className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-on-accent disabled:opacity-50">
               Send request
             </button>
           </div>

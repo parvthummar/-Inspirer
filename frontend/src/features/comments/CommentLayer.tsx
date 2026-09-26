@@ -144,7 +144,7 @@ export default function CommentLayer({ project, commenting, showResolved, childr
           aria-label={`Comment ${number} by ${comment.author}${comment.resolved ? ", resolved" : ""}`}
           style={{ left: `${comment.x}%`, top: `${comment.y}%` }}
           className={`absolute z-20 flex h-7 w-7 -translate-x-1/2 -translate-y-full items-center justify-center rounded-full rounded-bl-none text-xs font-semibold shadow-md ring-2 ring-panel ${
-            comment.resolved ? "bg-surface text-muted" : "bg-accent text-panel"
+            comment.resolved ? "bg-surface text-muted" : "bg-accent text-on-accent"
           }`}
         >
           {number}
@@ -156,7 +156,7 @@ export default function CommentLayer({ project, commenting, showResolved, childr
           <span
             data-comment-ui
             style={{ left: `${draft.x}%`, top: `${draft.y}%` }}
-            className="absolute z-20 flex h-7 w-7 -translate-x-1/2 -translate-y-full items-center justify-center rounded-full rounded-bl-none bg-accent text-xs font-semibold text-panel shadow-md ring-2 ring-panel"
+            className="absolute z-20 flex h-7 w-7 -translate-x-1/2 -translate-y-full items-center justify-center rounded-full rounded-bl-none bg-accent text-xs font-semibold text-on-accent shadow-md ring-2 ring-panel"
             aria-hidden
           >
             +

@@ -5,7 +5,7 @@ import { useProject } from "../../api/projects";
 import Button from "../../components/Button";
 import FullPageLoader from "../../components/FullPageLoader";
 import ChatPanel from "./ChatPanel";
-import PanelResizer from "./PanelResizer";
+import PanelResizer from "../../components/PanelResizer";
 import { useBuildProgress } from "./useBuildProgress";
 import WorkspaceHeader from "./WorkspaceHeader";
 import WorkspaceRightPanel from "./WorkspaceRightPanel";
@@ -52,7 +52,7 @@ export default function WorkspacePage() {
               Try again
             </Button>
           )}
-          <Link to="/" className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-panel hover:bg-accent/90">
+          <Link to="/" className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent/90">
             Back to projects
           </Link>
         </div>
@@ -61,10 +61,10 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="flex h-full min-w-[1024px] flex-col">
+    <div className="flex h-full min-w-[1024px] flex-col overflow-hidden">
       <WorkspaceHeader project={project.data} />
       <div className="flex min-h-0 flex-1">
-        <div style={{ width: chatWidth }} className="shrink-0">
+        <div style={{ width: chatWidth }} className="h-full min-h-0 shrink-0">
           <ChatPanel project={project.data} progress={progress} />
         </div>
         <PanelResizer width={chatWidth} min={CHAT_WIDTH.min} max={CHAT_WIDTH.max} onChange={changeChatWidth} />

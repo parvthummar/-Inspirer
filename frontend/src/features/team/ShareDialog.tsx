@@ -3,6 +3,7 @@ import { Check, Copy, Link2, X } from "lucide-react";
 import type { User } from "../../api/auth";
 import type { Project } from "../../api/projects";
 import Button from "../../components/Button";
+import DemoNotice from "../../components/DemoNotice";
 import Modal from "../../components/Modal";
 import { useToast } from "../../components/toast-context";
 import { previewUrl } from "../../lib/previewUrl";
@@ -61,6 +62,9 @@ export default function ShareDialog({ project, me, onClose }: ShareDialogProps) 
 
   return (
     <Modal title={`Share ${project.name}`} description="Invite people to build with you or to try the app and leave comments." onClose={onClose}>
+      <div className="mb-4">
+        <DemoNotice>No emails are sent in this prototype. Invited people join on their own after a few seconds, so you can see how it works.</DemoNotice>
+      </div>
       <form onSubmit={invite} noValidate>
         <div className="flex gap-2">
           <label className="min-w-0 flex-1">

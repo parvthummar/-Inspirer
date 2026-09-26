@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollText, Search } from "lucide-react";
 import type { Plan } from "../../api/plans";
 import type { Project } from "../../api/projects";
+import DemoBadge from "../../components/DemoBadge";
 import PanelEmptyState from "../../components/PanelEmptyState";
 import { buildLogLines, runtimeEvents, type LogLevel, type LogLine, type LogSource } from "./logLines";
 import type { BuildProgress } from "./useBuildProgress";
@@ -16,8 +17,8 @@ const RUNTIME_EVERY_MS = 2600;
 const MAX_RUNTIME_LINES = 200;
 
 const levelClass: Record<LogLevel, string> = {
-  info: "text-panel/75",
-  step: "text-panel font-semibold",
+  info: "text-terminal-ink/75",
+  step: "text-terminal-ink font-semibold",
   success: "text-success",
   warn: "text-danger",
 };
@@ -72,9 +73,9 @@ export default function LogsView({ project, plan, progress }: LogsViewProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-ink text-panel">
-      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-panel/10 px-3 py-2">
-        <div role="radiogroup" aria-label="Log source" className="flex rounded-md bg-panel/10 p-0.5">
+    <div className="flex h-full min-h-0 flex-col bg-terminal text-terminal-ink">
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-terminal-ink/10 px-3 py-2">
+        <div role="radiogroup" aria-label="Log source" className="flex rounded-md bg-terminal-ink/10 p-0.5">
           {(["all", "build", "runtime"] as const).map((option) => (
             <button
               key={option}
@@ -82,43 +83,46 @@ export default function LogsView({ project, plan, progress }: LogsViewProps) {
               role="radio"
               aria-checked={source === option}
               onClick={() => setSource(option)}
-              className={`rounded px-2 py-0.5 text-[11px] font-medium capitalize ${source === option ? "bg-panel text-ink" : "text-panel/70 hover:text-panel"}`}
+              className={`rounded px-2 py-0.5 text-[11px] font-medium capitalize ${source === option ? "bg-terminal-ink text-terminal" : "text-terminal-ink/70 hover:text-terminal-ink"}`}
             >
               {option}
             </button>
           ))}
         </div>
-        <label className="flex min-w-[140px] flex-1 items-center gap-1.5 rounded-md bg-panel/10 px-2 py-1">
-          <Search className="h-3.5 w-3.5 text-panel/50" aria-hidden />
+        <label className="flex min-w-[140px] flex-1 items-center gap-1.5 rounded-md bg-terminal-ink/10 px-2 py-1">
+          <Search className="h-3.5 w-3.5 text-terminal-ink/50" aria-hidden />
           <span className="sr-only">Filter logs</span>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Filter logs"
-            className="flex-1 bg-transparent font-mono text-[11px] text-panel placeholder:text-panel/40 focus:outline-none"
+            className="flex-1 bg-transparent font-mono text-[11px] text-terminal-ink placeholder:text-terminal-ink/40 focus:outline-none"
           />
         </label>
-        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-panel/70">
+        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-terminal-ink/70">
           <input type="checkbox" checked={follow} onChange={(event) => setFollow(event.target.checked)} className="accent-[rgb(var(--accent-rgb))]" />
           Follow
         </label>
-        <span className="flex items-center gap-1.5 text-[11px] text-panel/60">
+        <span className="flex items-center gap-1.5 text-[11px] text-terminal-ink/60">
           <span className={`h-1.5 w-1.5 rounded-full ${ready ? "animate-pulse bg-success" : "bg-accent"}`} aria-hidden />
           {ready ? "Live" : project.status === "building" ? "Building" : "Stopped"}
+        </span>
+        <span className="rounded-full bg-panel px-0.5">
+          <DemoBadge label="Simulated" align="end" explanation="Build and runtime logs are generated from your build steps and plan in this prototype." />
         </span>
       </div>
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto py-2 font-mono text-[11px] leading-5" role="log" aria-live="off">
         {lines.map((line) => (
-          <div key={line.id} className="flex gap-3 px-3 hover:bg-panel/5">
-            <span className="shrink-0 text-panel/40">{time.format(line.at)}</span>
-            <span className="w-14 shrink-0 text-panel/40">{line.source}</span>
+          <div key={line.id} className="flex gap-3 px-3 hover:bg-terminal-ink/5">
+            <span className="shrink-0 text-terminal-ink/40">{time.format(line.at)}</span>
+            <span className="w-14 shrink-0 text-terminal-ink/40">{line.source}</span>
             <span className={`min-w-0 break-words ${levelClass[line.level]}`}>
               {line.level === "step" ? "▸ " : line.level === "success" ? "✓ " : line.level === "warn" ? "! " : ""}
               {line.text}
             </span>
           </div>
         ))}
-        {lines.length === 0 && <p className="px-3 text-panel/50">No log lines match your filter.</p>}
+        {lines.length === 0 && <p className="px-3 text-terminal-ink/50">No log lines match your filter.</p>}
       </div>
     </div>
   );

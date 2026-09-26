@@ -2,6 +2,7 @@ import { useState } from "react";
 import { HardDrive, MessageSquare } from "lucide-react";
 import type { User } from "../../api/auth";
 import Button from "../../components/Button";
+import DemoNotice from "../../components/DemoNotice";
 import Modal from "../../components/Modal";
 import { useToast } from "../../components/toast-context";
 import { formatRelativeTime } from "../../lib/time";
@@ -54,6 +55,9 @@ export default function ConnectedAccountsSection({ user }: { user: User }) {
 
   return (
     <SettingsCard title="Connected accounts" description="Connect a service once and every project can use it.">
+      <div className="mb-4">
+        <DemoNotice>Connections are simulated in this prototype. Architect doesn't sign in to these services. Google sign-in on the login page is real.</DemoNotice>
+      </div>
       <ul className="divide-y divide-line">
         {CONNECTIONS.map((connection) => {
           const at = connectedAt(connection.id);

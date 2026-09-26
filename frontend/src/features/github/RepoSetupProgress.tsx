@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, LoaderCircle } from "lucide-react";
 import type { RepoChoice } from "./ChooseRepoStep";
 
@@ -19,14 +19,21 @@ export default function RepoSetupProgress({ choice, fileCount, onDone }: RepoSet
     "Turning on automatic sync",
   ];
 
+  // Held in a ref and called from the timer, so a re-render during saving can't call it twice.
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
   useEffect(() => {
-    if (step >= steps.length) {
-      onDone();
-      return;
-    }
-    const timer = window.setTimeout(() => setStep(step + 1), STEP_MS[step]);
+    if (step >= steps.length) return;
+    const timer = window.setTimeout(() => {
+      if (step + 1 < steps.length) setStep(step + 1);
+      else {
+        setStep(steps.length);
+        onDoneRef.current();
+      }
+    }, STEP_MS[step]);
     return () => window.clearTimeout(timer);
-  }, [step, steps.length, onDone]);
+  }, [step, steps.length]);
 
   return (
     <ol className="space-y-3 py-2" aria-live="polite">

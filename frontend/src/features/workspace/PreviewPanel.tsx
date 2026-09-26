@@ -4,7 +4,7 @@ import { useStartBuild } from "../../api/build";
 import type { Project } from "../../api/projects";
 import Button from "../../components/Button";
 import { previewUrl } from "../../lib/previewUrl";
-import { sampleAppFor } from "../../sample-apps";
+import PlanSite from "../site-preview/PlanSite";
 import BrowserFrame, { type Device } from "./BrowserFrame";
 import BuildReveal from "./BuildReveal";
 import PreviewPlaceholder from "./PreviewPlaceholder";
@@ -13,6 +13,7 @@ import { useComments } from "../comments/commentStore";
 import EditLayer from "../visual-edit/EditLayer";
 import ReadyBanner from "./ReadyBanner";
 import type { BuildProgress } from "./useBuildProgress";
+import { usePlanContent } from "./usePlanContent";
 
 const RELOAD_MS = 600;
 
@@ -50,7 +51,7 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
   }
 
   const compact = device === "mobile";
-  const App = sampleAppFor(project.template_key).component;
+  const plan = usePlanContent(project.id);
 
   let content;
   switch (project.status) {
@@ -74,7 +75,7 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
       break;
     case "building":
       content = progress ? (
-        <BuildReveal project={project} progress={progress} compact={compact} />
+        <BuildReveal project={project} plan={plan} progress={progress} compact={compact} />
       ) : (
         <PreviewPlaceholder
           icon={<LoaderCircle className="h-5 w-5 animate-spin" aria-hidden />}
@@ -117,7 +118,7 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
           )}
           {commenting && (
             <div className="absolute inset-x-0 bottom-3 z-40 mx-auto flex w-fit items-center gap-3 rounded-full bg-ink px-3 py-1 text-xs text-panel shadow-lg" data-comment-ui>
-              Click anywhere to leave a comment
+              Click anywhere to leave a comment. Teammate replies are simulated.
               <label className="flex cursor-pointer items-center gap-1.5 text-panel/80">
                 <input type="checkbox" checked={showResolved} onChange={() => setShowResolved((v) => !v)} className="accent-[rgb(var(--accent-rgb))]" />
                 Show resolved
@@ -126,7 +127,7 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
           )}
           <CommentLayer project={project} commenting={commenting} showResolved={showResolved}>
             <EditLayer project={project} editing={editing}>
-              <App key={reloadKey} appName={project.name} compact={compact} />
+              <PlanSite key={reloadKey} appName={project.name} plan={plan} description={project.description} compact={compact} />
             </EditLayer>
           </CommentLayer>
         </div>

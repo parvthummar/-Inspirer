@@ -5,6 +5,10 @@ import WelcomeIllustration from "./WelcomeIllustration";
 
 const STEPS = [
   {
+    title: "Pick the view that suits you",
+    body: "Every project has two views of the same app. Simple view shows just your app and speaks in plain words. Developer view adds the code, logs, diffs and framework choices. Switch with the toggle at the top of any project, whenever you like.",
+  },
+  {
     title: "Describe your app in plain words",
     body: "Say what it should do and who uses it. No technical terms needed. You can also start from a template or import an app you already have.",
   },
@@ -14,7 +18,7 @@ const STEPS = [
   },
   {
     title: "Watch it come together",
-    body: "Your app appears in the preview as it's built. Click anything to change it, or switch to Developer view to see the code, logs and agent settings.",
+    body: "Your app appears in the preview as it's built. Click anything in it to change it, or just tell Architect what you'd like different.",
   },
 ];
 
@@ -23,7 +27,7 @@ type WelcomeDialogProps = {
   onFinish: () => void;
 };
 
-/** First-run tour: three short steps, then straight into the prompt box. */
+/** First-run tour: four short steps, then straight into the prompt box. */
 export default function WelcomeDialog({ firstName, onFinish }: WelcomeDialogProps) {
   const [step, setStep] = useState(0);
   const last = step === STEPS.length - 1;

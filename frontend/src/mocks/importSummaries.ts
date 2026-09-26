@@ -10,6 +10,8 @@ export type ImportSummary = {
   files: number;
   languages: { name: string; share: number }[];
   notes: { tone: "info" | "warn"; text: string }[];
+  /** Start of the README, for real GitHub imports. */
+  readme_excerpt?: string;
 };
 
 type Kind = "support" | "sales" | "people" | "docs" | "general";
@@ -120,6 +122,10 @@ export function importPrompt(name: string, sourceLabel: string, summary: ImportS
     `Existing pages: ${summary.pages.join(", ")}.`,
     `Existing agents: ${agents}.`,
     `It connects to: ${summary.integrations.join(", ") || "nothing yet"}.`,
+    summary.stack.length ? `Built with: ${summary.stack.join(", ")}.` : "",
+    summary.readme_excerpt ? `From its README: ${summary.readme_excerpt.replace(/\s+/g, " ").slice(0, 1500)}` : "",
     "Keep what already works and suggest the most useful next improvements.",
-  ].join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 }

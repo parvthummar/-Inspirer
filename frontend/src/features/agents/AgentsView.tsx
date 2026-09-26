@@ -3,6 +3,7 @@ import { Bot, FlaskConical, Plus } from "lucide-react";
 import type { Plan } from "../../api/plans";
 import type { Project } from "../../api/projects";
 import Button from "../../components/Button";
+import DemoBadge from "../../components/DemoBadge";
 import { useToast } from "../../components/toast-context";
 import PanelEmptyState from "../../components/PanelEmptyState";
 import AgentCanvas from "./AgentCanvas";
@@ -51,6 +52,7 @@ export default function AgentsView({ project, plan }: AgentsViewProps) {
           <p className="mr-auto text-xs text-muted">
             {agents.length} {agents.length === 1 ? "agent" : "agents"} · click one to change how it works
           </p>
+          <DemoBadge explanation="Agent settings and framework changes are saved in this browser only in this prototype. Test runs are simulated." />
           {developer && (
             <FrameworkPicker
               current={workspace.framework}

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Check, Copy, KeyRound, TriangleAlert } from "lucide-react";
 import type { User } from "../../api/auth";
 import Button from "../../components/Button";
+import DemoNotice from "../../components/DemoNotice";
 import Modal from "../../components/Modal";
 import TextField from "../../components/TextField";
 import { useToast } from "../../components/toast-context";
@@ -52,6 +53,9 @@ export default function ApiKeysSection({ user }: { user: User }) {
       title="API keys"
       description="Use a key to start builds, send messages and read logs from your own scripts or CI. Keys have the same access as your account."
     >
+      <div className="mb-4">
+        <DemoNotice>Keys are examples in this prototype. They're stored in this browser and don't work with any API.</DemoNotice>
+      </div>
       <form onSubmit={create} className="flex items-end gap-2">
         <TextField label="Key name" placeholder="For example: CI pipeline" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} className="flex-1" />
         <Button type="submit" disabled={!name.trim()}>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Bot, ChevronDown, CircleAlert, Info, Link2, PanelsTopLeft } from "lucide-react";
+import DemoNotice from "../../components/DemoNotice";
 import TextField from "../../components/TextField";
 import type { ImportSummary } from "../../mocks/importSummaries";
 
@@ -8,16 +9,25 @@ type ImportSummaryViewProps = {
   name: string;
   onNameChange: (name: string) => void;
   nameError?: string;
+  /** True when the summary comes from really reading a GitHub repository (no "simulated" notice). */
+  readFromRepo?: boolean;
 };
 
 /** "Here's what I understood": the imported app in plain words, with technical details on request. */
-export default function ImportSummaryView({ summary, name, onNameChange, nameError }: ImportSummaryViewProps) {
+export default function ImportSummaryView({ summary, name, onNameChange, nameError, readFromRepo = false }: ImportSummaryViewProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
     <div className="space-y-4">
+      {!readFromRepo && (
+        <DemoNotice>
+          In this prototype, Architect only reads GitHub repositories. For this source, the summary is an example based on
+          the project's name and where it came from.
+        </DemoNotice>
+      )}
       <p className="text-sm leading-relaxed">
-        This looks like <span className="font-medium">{summary.description}</span>.
+        {readFromRepo ? "From the repository: " : "This looks like "}
+        <span className="font-medium">{summary.description}</span>.
       </p>
 
       <TextField label="Project name" value={name} onChange={(event) => onNameChange(event.target.value)} error={nameError} maxLength={120} />
@@ -28,11 +38,15 @@ export default function ImportSummaryView({ summary, name, onNameChange, nameErr
             <PanelsTopLeft className="h-3.5 w-3.5" aria-hidden />
             Pages
           </h3>
-          <ul className="mt-2 space-y-1 text-sm">
-            {summary.pages.map((page) => (
-              <li key={page}>{page}</li>
-            ))}
-          </ul>
+          {summary.pages.length ? (
+            <ul className="mt-2 space-y-1 text-sm">
+              {summary.pages.map((page) => (
+                <li key={page}>{page}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm text-muted">None found</p>
+          )}
         </section>
         <section className="rounded-lg border border-line p-3">
           <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted">
@@ -57,11 +71,15 @@ export default function ImportSummaryView({ summary, name, onNameChange, nameErr
             <Link2 className="h-3.5 w-3.5" aria-hidden />
             Connects to
           </h3>
-          <ul className="mt-2 space-y-1 text-sm">
-            {summary.integrations.map((integration) => (
-              <li key={integration}>{integration}</li>
-            ))}
-          </ul>
+          {summary.integrations.length ? (
+            <ul className="mt-2 space-y-1 text-sm">
+              {summary.integrations.map((integration) => (
+                <li key={integration}>{integration}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm text-muted">None found</p>
+          )}
         </section>
       </div>
 

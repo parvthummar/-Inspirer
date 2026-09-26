@@ -18,7 +18,7 @@ export default function MiniBarChart({ title, data, formatValue = String, height
   const max = Math.max(...data.map((d) => d.value), 1);
 
   return (
-    <figure className="rounded-lg border border-line bg-panel p-4">
+    <figure className="relative rounded-lg border border-line bg-panel p-4">
       <figcaption className="text-xs font-semibold">{title}</figcaption>
       <div className="relative mt-3 flex items-end gap-[2px] border-b border-line" style={{ height }} aria-hidden>
         {data.map((d, index) => (

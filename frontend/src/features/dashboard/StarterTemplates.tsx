@@ -6,12 +6,8 @@ type StarterTemplatesProps = {
 
 export default function StarterTemplates({ onPick }: StarterTemplatesProps) {
   return (
-    <section aria-labelledby="templates-heading">
-      <h2 id="templates-heading" className="text-sm font-semibold">
-        Start from a template
-      </h2>
-      <p className="mt-0.5 text-sm text-muted">Pick one to fill in the prompt, then change anything you like.</p>
-      <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <section aria-label="Starter templates">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {starterTemplates.map((template) => {
           const Icon = template.icon;
           return (

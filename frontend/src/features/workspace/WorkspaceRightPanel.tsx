@@ -8,6 +8,7 @@ import MonitorView from "../monitor/MonitorView";
 import CodeView from "./CodeView";
 import LogsView from "./LogsView";
 import PreviewPanel from "./PreviewPanel";
+import RepoCodeView from "./RepoCodeView";
 import type { BuildProgress } from "./useBuildProgress";
 
 type Tab = "preview" | "agents" | "monitor" | "code" | "logs";
@@ -63,26 +64,31 @@ export default function WorkspaceRightPanel({ project, progress }: WorkspaceRigh
         ))}
       </div>
       {/* The preview stays mounted so the app keeps its state while other tabs are open. */}
-      <div id="panel-preview" role="tabpanel" aria-labelledby="tab-preview" hidden={tab !== "preview"} className="min-h-0 flex-1">
+      <div id="panel-preview" role="tabpanel" aria-labelledby="tab-preview" hidden={tab !== "preview"} className="min-h-0 flex-1 overflow-hidden">
         <PreviewPanel project={project} progress={progress} />
       </div>
       {tab === "agents" && (
-        <div id="panel-agents" role="tabpanel" aria-labelledby="tab-agents" className="min-h-0 flex-1">
+        <div id="panel-agents" role="tabpanel" aria-labelledby="tab-agents" className="min-h-0 flex-1 overflow-hidden">
           <AgentsView project={project} plan={currentPlan} />
         </div>
       )}
       {tab === "monitor" && (
-        <div id="panel-monitor" role="tabpanel" aria-labelledby="tab-monitor" className="min-h-0 flex-1">
+        <div id="panel-monitor" role="tabpanel" aria-labelledby="tab-monitor" className="min-h-0 flex-1 overflow-hidden">
           <MonitorView project={project} plan={approvedPlan} />
         </div>
       )}
       {tab === "code" && (
-        <div id="panel-code" role="tabpanel" aria-labelledby="tab-code" className="min-h-0 flex-1">
-          <CodeView project={project} plan={approvedPlan} progress={progress} />
+        <div id="panel-code" role="tabpanel" aria-labelledby="tab-code" className="min-h-0 flex-1 overflow-hidden">
+          {/* Imported repositories show their real code; built projects show the generated code. */}
+          {project.source ? (
+            <RepoCodeView project={project} />
+          ) : (
+            <CodeView project={project} plan={approvedPlan} progress={progress} />
+          )}
         </div>
       )}
       {tab === "logs" && (
-        <div id="panel-logs" role="tabpanel" aria-labelledby="tab-logs" className="min-h-0 flex-1">
+        <div id="panel-logs" role="tabpanel" aria-labelledby="tab-logs" className="min-h-0 flex-1 overflow-hidden">
           <LogsView project={project} plan={approvedPlan} progress={progress} />
         </div>
       )}

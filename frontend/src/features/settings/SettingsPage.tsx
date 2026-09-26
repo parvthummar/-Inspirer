@@ -1,7 +1,7 @@
 import { CreditCard, KeyRound, Plug, UserRound } from "lucide-react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useMe } from "../../api/auth";
-import AppHeader from "../../components/AppHeader";
+import AppShell from "../../components/AppShell";
 import ApiKeysSection from "./ApiKeysSection";
 import BillingSection from "./BillingSection";
 import ConnectedAccountsSection from "./ConnectedAccountsSection";
@@ -26,9 +26,8 @@ export default function SettingsPage() {
   const active = section as SectionId;
 
   return (
-    <div className="min-h-full">
-      <AppHeader />
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+    <AppShell>
+      <main className="mx-auto max-w-5xl px-4 pb-10 pt-2 sm:px-6">
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <div className="mt-6 grid gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
           {/* Phones get a menu; wider screens a side list. */}
@@ -72,6 +71,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </main>
-    </div>
+    </AppShell>
   );
 }

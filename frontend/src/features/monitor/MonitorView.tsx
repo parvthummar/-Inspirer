@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Activity } from "lucide-react";
 import type { Plan } from "../../api/plans";
 import type { Project } from "../../api/projects";
+import DemoNotice from "../../components/DemoNotice";
 import MiniBarChart from "../../components/MiniBarChart";
 import PanelEmptyState from "../../components/PanelEmptyState";
 import { formatRelativeTime } from "../../lib/time";
@@ -123,6 +124,10 @@ export default function MonitorView({ project, plan }: MonitorViewProps) {
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="space-y-3 p-3">
+          <DemoNotice>
+            Simulated activity. These conversations are examples generated from your plan to show what monitoring looks like.
+            Once your app is live, the real conversations your agents handle appear here.
+          </DemoNotice>
           <MonitorStats runs={runs} developer={developer} />
           <MiniBarChart title={range === 24 ? "Conversations, last 24 hours" : "Conversations, last 7 days"} data={perBucket} height={72} />
           <div className="grid min-h-[360px] grid-cols-[minmax(0,2fr)_minmax(0,3fr)] overflow-hidden rounded-lg border border-line bg-panel">

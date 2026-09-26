@@ -4,6 +4,7 @@ import { useUsage } from "../api/usage";
 import Alert from "./Alert";
 import Button from "./Button";
 import CreditsBar from "./CreditsBar";
+import DemoBadge from "./DemoBadge";
 import { useToast } from "./toast-context";
 
 const kindLabels = { plans: "Plans written", replies: "Chat replies", builds: "Builds" } as const;
@@ -95,7 +96,10 @@ export default function UsageSummary() {
           )}
 
           <section>
-            <h3 className="text-xs font-semibold text-muted">Plans</h3>
+            <h3 className="flex items-center gap-2 text-xs font-semibold text-muted">
+              Plans
+              <DemoBadge explanation="Credit use is counted from your real activity. Plans and upgrade requests are examples in this prototype; no request is sent." />
+            </h3>
             <ul className="mt-2 grid grid-cols-3 gap-2">
               {plans.map((plan) => {
                 const current = plan.name === usage.data.plan_name;
@@ -129,7 +133,7 @@ export default function UsageSummary() {
             </ul>
             {requested && (
               <p className="mt-2 text-xs text-muted">
-                Thanks. Our team will email you within one working day to set up the new plan.
+                Request noted. In the real product, our team would email you to set up the new plan.
               </p>
             )}
           </section>

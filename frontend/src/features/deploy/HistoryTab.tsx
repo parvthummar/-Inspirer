@@ -59,7 +59,7 @@ export default function HistoryTab({ deploy, developer }: HistoryTabProps) {
                 )}
               </div>
               {developer && open && (
-                <pre className="mt-3 max-h-48 overflow-y-auto rounded-md bg-ink p-3 font-mono text-[11px] leading-5 text-panel/80">
+                <pre className="mt-3 max-h-48 overflow-y-auto rounded-md bg-terminal p-3 font-mono text-[11px] leading-5 text-terminal-ink/80">
                   {deployment.logs.join("\n")}
                 </pre>
               )}

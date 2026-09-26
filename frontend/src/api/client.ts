@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+// In development the backend runs on its own port. In production the frontend calls /api on its own
+// domain and Vercel forwards it to the backend (vercel.json), so the login cookie is first-party.
+const API_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? "http://localhost:8000" : "");
 
 export class ApiError extends Error {
   status: number;

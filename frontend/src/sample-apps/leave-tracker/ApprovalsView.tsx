@@ -43,7 +43,7 @@ export default function ApprovalsView({ requests, onDecide }: ApprovalsViewProps
                 <button
                   type="button"
                   onClick={() => onDecide(request.id, "Approved")}
-                  className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-panel"
+                  className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-on-accent"
                 >
                   <Check className="h-3.5 w-3.5" aria-hidden />
                   Approve

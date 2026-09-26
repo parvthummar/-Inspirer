@@ -165,7 +165,7 @@ export default function EditLayer({ project, editing, children }: EditLayerProps
           style={{ top: hovered.box.top, left: hovered.box.left, width: hovered.box.width, height: hovered.box.height }}
           aria-hidden
         >
-          <span className="absolute -top-5 left-0 whitespace-nowrap rounded bg-accent px-1.5 py-0.5 text-[10px] font-medium text-panel">
+          <span className="absolute -top-5 left-0 whitespace-nowrap rounded bg-accent px-1.5 py-0.5 text-[10px] font-medium text-on-accent">
             {hovered.label}
           </span>
         </div>

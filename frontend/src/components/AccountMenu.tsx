@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Gauge, LogOut, Settings } from "lucide-react";
+import { ChevronsUpDown, Gauge, LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLogout, type User } from "../api/auth";
+import ThemeSwitcher from "./ThemeSwitcher";
 import UsageDialog from "./UsageDialog";
 
 function initials(name: string): string {
@@ -13,7 +14,14 @@ function initials(name: string): string {
     .join("");
 }
 
-export default function AccountMenu({ user }: { user: User }) {
+type AccountMenuProps = {
+  user: User;
+  /** "avatar": round button that opens downwards (workspace header). "sidebar": full-width row that opens upwards. */
+  variant?: "avatar" | "sidebar";
+};
+
+export default function AccountMenu({ user, variant = "avatar" }: AccountMenuProps) {
+  const sidebar = variant === "sidebar";
   const [open, setOpen] = useState(false);
   const [usageOpen, setUsageOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -38,20 +46,42 @@ export default function AccountMenu({ user }: { user: User }) {
 
   return (
     <div ref={menuRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Account menu"
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-xs font-semibold text-panel"
-      >
-        {initials(user.name)}
-      </button>
+      {sidebar ? (
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="Account menu"
+          className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-surface"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-semibold text-panel">
+            {initials(user.name)}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-medium">{user.name}</span>
+            <span className="block truncate text-xs text-muted">{user.email}</span>
+          </span>
+          <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="Account menu"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-xs font-semibold text-panel"
+        >
+          {initials(user.name)}
+        </button>
+      )}
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-20 mt-2 w-60 rounded-lg border border-line bg-panel p-1 shadow-[0_8px_24px_rgba(22,32,42,0.12)]"
+          className={`absolute z-30 rounded-lg border border-line bg-panel p-1 shadow-[0_8px_24px_rgba(22,32,42,0.12)] ${
+            sidebar ? "bottom-full left-0 right-0 mb-2" : "right-0 mt-2 w-60"
+          }`}
         >
           <div className="border-b border-line px-3 py-2.5">
             <p className="truncate text-sm font-medium">{user.name}</p>
@@ -81,6 +111,10 @@ export default function AccountMenu({ user }: { user: User }) {
             <Settings className="h-4 w-4 text-muted" aria-hidden />
             Settings
           </button>
+          <div className="mt-1 border-t border-line px-2 pb-1 pt-2">
+            <p className="mb-1.5 px-1 text-[11px] text-muted">Theme</p>
+            <ThemeSwitcher size="sm" />
+          </div>
           <button
             type="button"
             role="menuitem"

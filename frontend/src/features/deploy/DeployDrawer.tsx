@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Build } from "../../api/build";
 import type { Project } from "../../api/projects";
+import DemoNotice from "../../components/DemoNotice";
 import Drawer from "../../components/Drawer";
 import DomainTab from "./DomainTab";
 import EnvVarsTab from "./EnvVarsTab";
@@ -45,11 +46,12 @@ export default function DeployDrawer({ project, build, deploy, previewHost, prod
             }`}
           >
             {label}
-            {badge ? <span className="rounded-full bg-danger px-1.5 text-[10px] font-semibold text-panel">{badge}</span> : null}
+            {badge ? <span className="rounded-full bg-danger px-1.5 text-[10px] font-semibold text-on-accent">{badge}</span> : null}
           </button>
         ))}
       </div>
-      <div role="tabpanel" className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+      <div role="tabpanel" className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+        <DemoNotice>Deploys are simulated in this prototype. Nothing is published, and domains and keys aren't sent anywhere.</DemoNotice>
         {tab === "overview" && (
           <OverviewTab
             deploy={deploy}

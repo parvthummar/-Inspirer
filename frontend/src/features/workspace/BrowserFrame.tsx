@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import DemoBadge from "../../components/DemoBadge";
 import { ExternalLink, Lock, MessageSquare, Monitor, MousePointerClick, RotateCw, Smartphone, Tablet } from "lucide-react";
 
 export type Device = "desktop" | "tablet" | "mobile";
@@ -60,6 +61,12 @@ export default function BrowserFrame({
           <Lock className="h-3 w-3 shrink-0" aria-hidden />
           <span className="truncate">{url}</span>
         </div>
+        {live && (
+          <DemoBadge
+            label="Mock-up"
+            explanation="In this prototype, the preview is a mock-up of your app generated from its plan: its pages, agents and services, filled with example content. It doesn't run your code."
+          />
+        )}
         <div role="radiogroup" aria-label="Preview size" className="flex rounded-md bg-surface p-0.5">
           {devices.map(({ value, label, icon: Icon }) => (
             <button
@@ -84,13 +91,13 @@ export default function BrowserFrame({
             aria-pressed={commenting}
             title={live ? (commenting ? "Stop commenting" : "Leave comments for your team") : "Available once your app is built"}
             className={`relative flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium disabled:opacity-40 ${
-              commenting ? "bg-accent text-panel" : "text-muted hover:bg-surface hover:text-ink"
+              commenting ? "bg-accent text-on-accent" : "text-muted hover:bg-surface hover:text-ink"
             }`}
           >
             <MessageSquare className="h-3.5 w-3.5" aria-hidden />
             {commenting ? "Done" : "Comment"}
             {openComments > 0 && !commenting && (
-              <span className="rounded-full bg-accent px-1.5 text-[10px] font-semibold text-panel">{openComments}</span>
+              <span className="rounded-full bg-accent px-1.5 text-[10px] font-semibold text-on-accent">{openComments}</span>
             )}
           </button>
         )}
@@ -102,7 +109,7 @@ export default function BrowserFrame({
             aria-pressed={editing}
             title={live ? (editing ? "Stop editing" : "Click an element to change it") : "Available once your app is built"}
             className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium disabled:opacity-40 ${
-              editing ? "bg-accent text-panel" : "text-muted hover:bg-surface hover:text-ink"
+              editing ? "bg-accent text-on-accent" : "text-muted hover:bg-surface hover:text-ink"
             }`}
           >
             <MousePointerClick className="h-3.5 w-3.5" aria-hidden />

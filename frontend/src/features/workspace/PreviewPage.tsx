@@ -4,8 +4,9 @@ import { Link, useParams } from "react-router-dom";
 import { useProject } from "../../api/projects";
 import FullPageLoader from "../../components/FullPageLoader";
 import { previewUrl } from "../../lib/previewUrl";
-import { sampleAppFor } from "../../sample-apps";
+import PlanSite from "../site-preview/PlanSite";
 import EditLayer from "../visual-edit/EditLayer";
+import { usePlanContent } from "./usePlanContent";
 
 const COMPACT_BELOW_PX = 640;
 
@@ -13,6 +14,7 @@ const COMPACT_BELOW_PX = 640;
 export default function PreviewPage() {
   const { id = "" } = useParams();
   const project = useProject(id);
+  const plan = usePlanContent(id);
   const [compact, setCompact] = useState(() => window.innerWidth < COMPACT_BELOW_PX);
 
   useEffect(() => {
@@ -34,14 +36,13 @@ export default function PreviewPage() {
         <p className="max-w-sm text-sm text-muted">
           {project.isError ? project.error.message : "The app hasn't finished building yet."}
         </p>
-        <Link to={`/project/${id}`} className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-panel hover:bg-accent/90">
+        <Link to={`/project/${id}`} className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent/90">
           Back to the workspace
         </Link>
       </div>
     );
   }
 
-  const App = sampleAppFor(project.data.template_key).component;
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-9 shrink-0 items-center gap-3 bg-ink px-3 text-xs text-panel/80">
@@ -58,7 +59,7 @@ export default function PreviewPage() {
       <div className="min-h-0 flex-1">
         {/* Not editable here, but shows the changes made with click-to-edit. */}
         <EditLayer project={project.data} editing={false}>
-          <App appName={project.data.name} compact={compact} />
+          <PlanSite appName={project.data.name} plan={plan} description={project.data.description} compact={compact} />
         </EditLayer>
       </div>
     </div>

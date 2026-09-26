@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { FileArchive, GitBranch, Layers, Lock, UploadCloud } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAnalyzeRepo } from "../../api/github";
 import { useCreateProject, useUpdateProject } from "../../api/projects";
 import Alert from "../../components/Alert";
 import Button from "../../components/Button";
@@ -9,6 +10,7 @@ import TextField from "../../components/TextField";
 import { useToast } from "../../components/toast-context";
 import { existingRepos } from "../../mocks/githubRepos";
 import {
+  githubReadSteps,
   importSteps,
   otherPlatforms,
   parseGithubRepo,
@@ -30,7 +32,15 @@ const sources: { id: ImportSource; label: string; icon: typeof GitBranch }[] = [
   { id: "platform", label: "Another platform", icon: Layers },
 ];
 
-type Analysis = { sourceLabel: string; steps: ImportStep[]; summary: ImportSummary; suggestedName: string };
+type Analysis = {
+  sourceLabel: string;
+  steps: ImportStep[];
+  /** Null while a real GitHub read is still in progress. */
+  summary: ImportSummary | null;
+  suggestedName: string;
+  /** Set for GitHub imports, which are read for real. */
+  repo?: { owner: string; name: string };
+};
 
 function formatBytes(bytes: number): string {
   return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
@@ -50,21 +60,24 @@ export default function ImportProjectModal({ onClose }: { onClose: () => void })
   const [name, setName] = useState("");
 
   const githubAccount = useGitHubAccount();
+  const analyzeRepo = useAnalyzeRepo();
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const navigate = useNavigate();
   const toast = useToast();
 
-  const analysing = analysis !== null && currentStep < analysis.steps.length;
+  const waitingForGitHub = Boolean(analysis?.repo && !analysis.summary);
+  const analysing = analysis !== null && (currentStep < analysis.steps.length || waitingForGitHub);
   const importing = createProject.isPending || updateProject.isPending;
   const failure = createProject.error ?? updateProject.error;
 
-  // Walk through the scripted analysis steps, then show the summary.
+  // Walk through the analysis steps, then show the summary. For GitHub, the last step waits for the real answer.
   useEffect(() => {
     if (!analysis || currentStep >= analysis.steps.length) return;
+    if (waitingForGitHub && currentStep >= analysis.steps.length - 1) return;
     const timer = window.setTimeout(() => setCurrentStep((step) => step + 1), analysis.steps[currentStep].durationMs);
     return () => window.clearTimeout(timer);
-  }, [analysis, currentStep]);
+  }, [analysis, currentStep, waitingForGitHub]);
 
   function handleZipChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
@@ -90,7 +103,8 @@ export default function ImportProjectModal({ onClose }: { onClose: () => void })
         return null;
       }
       const label = `github.com/${repo}`;
-      return { sourceLabel: label, steps: importSteps("github", label), summary: summarizeImport("github", repo), suggestedName: projectNameFromSlug(repo.split("/")[1]) };
+      const [owner, name] = repo.split("/");
+      return { sourceLabel: label, steps: githubReadSteps(label), summary: null, suggestedName: projectNameFromSlug(name), repo: { owner, name } };
     }
     if (source === "zip") {
       if (!zipFile) {
@@ -110,12 +124,30 @@ export default function ImportProjectModal({ onClose }: { onClose: () => void })
     setName(next.suggestedName);
     setCurrentStep(0);
     setAnalysis(next);
+    if (next.repo) {
+      // Read the real repository while the steps play.
+      analyzeRepo.mutate(`${next.repo.owner}/${next.repo.name}`, {
+        onSuccess: (result) => {
+          setAnalysis((current) =>
+            current && { ...current, summary: result.summary, repo: { owner: result.source.owner, name: result.source.name } },
+          );
+          setName(projectNameFromSlug(result.source.name));
+        },
+        onError: (error) => {
+          // Back to the form, with GitHub's answer next to the link.
+          setAnalysis(null);
+          setRepoError(error.message);
+        },
+      });
+    }
   }
 
   function finishImport() {
-    if (!analysis || !name.trim()) return;
+    if (!analysis || !analysis.summary || !name.trim()) return;
     const projectName = name.trim();
-    createProject.mutate(importPrompt(projectName, analysis.sourceLabel, analysis.summary), {
+    const prompt = importPrompt(projectName, analysis.sourceLabel, analysis.summary);
+    const source = analysis.repo ? { type: "github" as const, ...analysis.repo } : undefined;
+    createProject.mutate({ prompt, source }, {
       onSuccess: (project) =>
         updateProject.mutate(
           { id: project.id, changes: { name: projectName } },
@@ -132,6 +164,7 @@ export default function ImportProjectModal({ onClose }: { onClose: () => void })
   function startOver() {
     createProject.reset();
     updateProject.reset();
+    analyzeRepo.reset();
     setAnalysis(null);
     setCurrentStep(0);
   }
@@ -144,7 +177,7 @@ export default function ImportProjectModal({ onClose }: { onClose: () => void })
     );
   }
 
-  if (analysis) {
+  if (analysis?.summary) {
     return (
       <Modal
         title="Here's what I understood"
@@ -169,6 +202,7 @@ export default function ImportProjectModal({ onClose }: { onClose: () => void })
         )}
         <ImportSummaryView
           summary={analysis.summary}
+          readFromRepo={Boolean(analysis.repo)}
           name={name}
           onNameChange={setName}
           nameError={name.trim() ? undefined : "Give the project a name."}

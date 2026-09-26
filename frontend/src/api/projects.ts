@@ -4,6 +4,9 @@ import { apiFetch } from "./client";
 export type ViewMode = "simple" | "developer";
 export type ProjectStatus = "draft" | "planning" | "building" | "ready" | "error";
 
+/** Where an imported project came from. */
+export type ProjectSource = { type: "github"; owner: string; name: string; branch: string; url: string };
+
 export type Project = {
   id: string;
   name: string;
@@ -12,6 +15,7 @@ export type Project = {
   view_mode: ViewMode;
   status: ProjectStatus;
   template_key: string | null;
+  source: ProjectSource | null;
   created_at: string;
   updated_at: string;
 };
@@ -44,8 +48,8 @@ export function useProject(id: string) {
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (prompt: string) =>
-      apiFetch<Project>("/api/projects", { method: "POST", body: JSON.stringify({ prompt }) }),
+    mutationFn: (input: { prompt: string; source?: { type: "github"; owner: string; name: string } }) =>
+      apiFetch<Project>("/api/projects", { method: "POST", body: JSON.stringify(input) }),
     onSuccess: (project) => {
       queryClient.setQueryData(projectKeys.detail(project.id), project);
       void queryClient.invalidateQueries({ queryKey: projectKeys.all, exact: true });

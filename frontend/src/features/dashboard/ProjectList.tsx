@@ -16,19 +16,14 @@ export default function ProjectList({ onStartNew }: ProjectListProps) {
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   return (
-    <section aria-labelledby="projects-heading">
-      <div className="flex items-baseline justify-between">
-        <h2 id="projects-heading" className="text-sm font-semibold">
-          Your projects
-        </h2>
-        {projects.data && projects.data.length > 0 && (
-          <span className="text-xs text-muted">
-            {projects.data.length} {projects.data.length === 1 ? "project" : "projects"}
-          </span>
-        )}
-      </div>
+    <section aria-label="Your projects">
+      {projects.data && projects.data.length > 0 && (
+        <p className="text-xs text-muted">
+          {projects.data.length} {projects.data.length === 1 ? "project" : "projects"}
+        </p>
+      )}
 
-      <div className="mt-4">
+      <div className="mt-3">
         {projects.isPending && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading your projects">
             <ProjectSkeleton />

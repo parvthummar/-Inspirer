@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, LoaderCircle } from "lucide-react";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
@@ -20,19 +20,26 @@ export default function FrameworkPicker({ current, agentCount, onChange }: Frame
   const [step, setStep] = useState<number | null>(null);
   const toast = useToast();
   const pendingName = frameworks.find((f) => f.id === pending)?.name;
+  // Held in a ref: saving re-renders the parent, which passes a new onChange. If the effect depended
+  // on it, the save would run again and again (the "Maximum update depth" crash).
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   useEffect(() => {
     if (step === null || !pending) return;
-    if (step >= REGENERATE_STEPS.length) {
-      onChange(pending);
-      toast(`Switched to ${pendingName}`);
+    const timer = window.setTimeout(() => {
+      if (step + 1 < REGENERATE_STEPS.length) {
+        setStep(step + 1);
+        return;
+      }
+      // Last step done: finish here, in the timer, so it happens exactly once.
       setPending(null);
       setStep(null);
-      return;
-    }
-    const timer = window.setTimeout(() => setStep(step + 1), STEP_MS);
+      onChangeRef.current(pending);
+      toast(`Switched to ${frameworks.find((f) => f.id === pending)?.name}`);
+    }, STEP_MS);
     return () => window.clearTimeout(timer);
-  }, [step, pending, pendingName, onChange, toast]);
+  }, [step, pending, toast]);
 
   return (
     <>

@@ -14,6 +14,9 @@ export default {
       accent: "rgb(var(--accent-rgb) / <alpha-value>)",
       danger: "rgb(var(--danger-rgb) / <alpha-value>)",
       success: "rgb(var(--success-rgb) / <alpha-value>)",
+      "on-accent": "rgb(var(--on-accent-rgb) / <alpha-value>)",
+      terminal: "rgb(var(--terminal-rgb) / <alpha-value>)",
+      "terminal-ink": "rgb(var(--terminal-ink-rgb) / <alpha-value>)",
     },
     extend: {
       fontFamily: {

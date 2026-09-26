@@ -5,12 +5,27 @@ type PanelResizerProps = {
   min: number;
   max: number;
   onChange: (width: number) => void;
+  /** Double-clicking the handle calls this, e.g. to go back to the default width. */
+  onReset?: () => void;
+  /** Dragging below this width (past the minimum) collapses the panel instead of stopping at the minimum. */
+  collapseBelow?: number;
+  onCollapse?: () => void;
+  label?: string;
 };
 
 const KEYBOARD_STEP = 24;
 
-/** Drag handle between the chat and preview panels. Also works with the arrow keys. */
-export default function PanelResizer({ width, min, max, onChange }: PanelResizerProps) {
+/** Drag handle between two side-by-side panels. Also works with the arrow keys; double-click resets. */
+export default function PanelResizer({
+  width,
+  min,
+  max,
+  onChange,
+  onReset,
+  collapseBelow,
+  onCollapse,
+  label = "Resize chat panel",
+}: PanelResizerProps) {
   const start = useRef<{ x: number; width: number } | null>(null);
   const clamp = (value: number) => Math.min(max, Math.max(min, value));
 
@@ -23,7 +38,15 @@ export default function PanelResizer({ width, min, max, onChange }: PanelResizer
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
     if (!start.current) return;
-    onChange(clamp(start.current.width + event.clientX - start.current.x));
+    const wanted = start.current.width + event.clientX - start.current.x;
+    if (onCollapse && collapseBelow !== undefined && wanted < collapseBelow) {
+      // Squeezed well past the minimum: hide the panel, keeping the width it had before the drag.
+      onChange(clamp(start.current.width));
+      handlePointerUp();
+      onCollapse();
+      return;
+    }
+    onChange(clamp(wanted));
   }
 
   function handlePointerUp() {
@@ -33,7 +56,9 @@ export default function PanelResizer({ width, min, max, onChange }: PanelResizer
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "ArrowLeft") onChange(clamp(width - KEYBOARD_STEP));
+    // At the minimum, one more step left collapses the panel (when it can collapse).
+    if (event.key === "ArrowLeft" && onCollapse && width <= min) onCollapse();
+    else if (event.key === "ArrowLeft") onChange(clamp(width - KEYBOARD_STEP));
     if (event.key === "ArrowRight") onChange(clamp(width + KEYBOARD_STEP));
   }
 
@@ -41,7 +66,9 @@ export default function PanelResizer({ width, min, max, onChange }: PanelResizer
     <div
       role="separator"
       aria-orientation="vertical"
-      aria-label="Resize chat panel"
+      aria-label={label}
+      title={onReset ? "Drag to resize. Double-click to reset." : "Drag to resize"}
+      onDoubleClick={onReset}
       aria-valuenow={width}
       aria-valuemin={min}
       aria-valuemax={max}

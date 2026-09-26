@@ -9,7 +9,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-panel shadow-sm hover:bg-accent/90 disabled:bg-accent/60",
+  primary: "bg-accent text-on-accent shadow-sm hover:bg-accent/90 disabled:bg-accent/60",
   secondary: "border border-line bg-panel text-ink hover:bg-surface disabled:text-muted",
   ghost: "text-muted hover:bg-surface hover:text-ink disabled:text-muted/60",
 };

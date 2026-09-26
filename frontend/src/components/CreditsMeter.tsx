@@ -19,13 +19,15 @@ export default function CreditsMeter() {
         type="button"
         onClick={() => setOpen(true)}
         title="Usage and credits"
-        className={`hidden items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-surface sm:flex ${low ? "text-danger" : "text-muted"}`}
+        className={`flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-surface ${
+          low ? "text-danger" : "text-ink"
+        }`}
       >
-        <Gauge className="h-4 w-4" aria-hidden />
+        <Gauge className={`h-4 w-4 ${low ? "" : "text-muted"}`} aria-hidden />
         <span className="whitespace-nowrap">
-          {total - used} credits left
+          {Math.max(0, total - used)} <span className="text-muted">credits left</span>
         </span>
-        <CreditsBar used={used} total={total} className="w-14" />
+        <CreditsBar used={used} total={total} className="hidden w-14 sm:block" />
       </button>
       {open && <UsageDialog onClose={() => setOpen(false)} />}
     </>

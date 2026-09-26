@@ -1,0 +1,32 @@
+# Render blueprint for the backend (New > Blueprint, pick this repository).
+# Secrets are marked sync: false, so Render asks for them when the blueprint is created.
+services:
+  - type: web
+    name: architect-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: ohio  # same area as the Neon database (us-east-2)
+    buildCommand: pip install -r requirements.txt
+    # Migrations run on every start; they do nothing when the database is already up to date.
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false

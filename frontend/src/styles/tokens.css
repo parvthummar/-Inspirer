@@ -17,7 +17,42 @@
   --danger-rgb: 208 52 44;
   --success: #1f8a5b;
   --success-rgb: 31 138 91;
+  /* Text on solid accent, danger or success backgrounds. White in both themes. */
+  --on-accent: #ffffff;
+  --on-accent-rgb: 255 255 255;
+  /* Log and terminal panels: dark in both themes. */
+  --terminal: #16202a;
+  --terminal-rgb: 22 32 42;
+  --terminal-ink: #e6ebf0;
+  --terminal-ink-rgb: 230 235 240;
 
   --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* Dark theme: warm graphite rather than the usual blue-grey, with a soft periwinkle accent.
+   Accent buttons use dark text here (checked for contrast: all text pairs are 6.5:1 or better).
+   Set on <html data-theme="dark"> (see index.html and lib/theme.ts). */
+:root[data-theme="dark"] {
+  --surface: #121110;
+  --surface-rgb: 18 17 16;
+  --panel: #1b1a18;
+  --panel-rgb: 27 26 24;
+  --ink: #ece8e1;
+  --ink-rgb: 236 232 225;
+  --muted: #a39e95;
+  --muted-rgb: 163 158 149;
+  --line: #2e2c29;
+  --line-rgb: 46 44 41;
+  --accent: #93a4ff;
+  --accent-rgb: 147 164 255;
+  --danger: #f08a7e;
+  --danger-rgb: 240 138 126;
+  --success: #6cc79a;
+  --success-rgb: 108 199 154;
+  --on-accent: #15140f;
+  --on-accent-rgb: 21 20 15;
+  --terminal: #0c0b0a;
+  --terminal-rgb: 12 11 10;
+  color-scheme: dark;
 }

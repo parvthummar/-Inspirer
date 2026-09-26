@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import type { Project } from "../../api/projects";
-import { sampleAppFor } from "../../sample-apps";
+import type { PlanContent } from "../../api/plans";
+import PlanSite from "../site-preview/PlanSite";
 import type { BuildProgress } from "./useBuildProgress";
 
 type BuildRevealProps = {
   project: Project;
+  plan: PlanContent | null;
   progress: BuildProgress;
   compact: boolean;
 };
@@ -13,9 +15,8 @@ type BuildRevealProps = {
  * The one bold moment in the product: the app assembles from top to bottom while the build runs.
  * Above the scan line is the real app; below it, a wireframe of what's still being built.
  */
-export default function BuildReveal({ project, progress, compact }: BuildRevealProps) {
+export default function BuildReveal({ project, plan, progress, compact }: BuildRevealProps) {
   const appRef = useRef<HTMLDivElement>(null);
-  const App = sampleAppFor(project.template_key).component;
   const revealed = Math.round(progress.fraction * 100);
   const developer = project.view_mode === "developer";
   const step = progress.currentStep;
@@ -28,7 +29,7 @@ export default function BuildReveal({ project, progress, compact }: BuildRevealP
   return (
     <div className="relative h-full overflow-hidden" aria-busy="true">
       <div ref={appRef} className="h-full" aria-hidden>
-        <App appName={project.name} compact={compact} />
+        <PlanSite appName={project.name} plan={plan} description={project.description} compact={compact} />
       </div>
 
       {/* Not-yet-built part: wireframe below the scan line. */}
@@ -86,7 +87,7 @@ export default function BuildReveal({ project, progress, compact }: BuildRevealP
               {developer ? step.dev_label : step.label}
             </p>
             <p className="text-xs text-panel/60">
-              Step {progress.currentIndex + 1} of {progress.build.steps.length} · {revealed}%
+              Step {progress.currentIndex + 1} of {progress.build.steps.length} · {revealed}% · simulated build
             </p>
           </div>
         </div>

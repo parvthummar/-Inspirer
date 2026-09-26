@@ -55,13 +55,15 @@ def get_project(db: Session, user: User, project_id: uuid.UUID) -> Project:
     return project
 
 
-def create_project(db: Session, user: User, prompt: str) -> Project:
+def create_project(db: Session, user: User, prompt: str, source: dict | None = None) -> Project:
+    """Create a project. `source` is set for imports (e.g. the GitHub repository and its file list)."""
     prompt = prompt.strip()
     project = Project(
         user_id=user.id,
         name=draft_name_from_prompt(prompt),
         initial_prompt=prompt,
         status="planning",  # the plan is written in the background right after creation
+        source=source,
     )
     # The prompt is the first message of the project's chat, and the earliest checkpoint.
     first_message = Message(role="user", content=prompt)

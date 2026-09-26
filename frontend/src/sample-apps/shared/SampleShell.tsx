@@ -53,7 +53,7 @@ export default function SampleShell({
         className={
           compact
             ? `flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
-                selected ? "bg-accent text-panel" : "bg-surface text-muted"
+                selected ? "bg-accent text-on-accent" : "bg-surface text-muted"
               }`
             : `flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] font-medium ${
                 selected ? "bg-accent/10 text-accent" : "text-muted hover:bg-surface hover:text-ink"
@@ -65,7 +65,7 @@ export default function SampleShell({
         {badge !== undefined && badge > 0 && (
           <span
             className={`ml-auto rounded-full px-1.5 text-[10px] font-semibold ${
-              selected && compact ? "bg-panel/20" : "bg-accent text-panel"
+              selected && compact ? "bg-panel/20" : "bg-accent text-on-accent"
             }`}
           >
             {badge}
@@ -77,7 +77,7 @@ export default function SampleShell({
 
   const brandMark = (
     <div className="flex min-w-0 items-center gap-2">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent text-panel">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent text-on-accent">
         <Logo className="h-4 w-4" aria-hidden />
       </span>
       <span className="truncate text-sm font-semibold">{appName}</span>

@@ -13,11 +13,14 @@ import {
 } from "../../mocks/generatedFiles";
 import { sourceFilesFor } from "../../sample-apps/sources";
 
+export type LoadedFile = { content: string; notice?: string };
+
 export type ProjectFile = {
   path: string;
   /** The build step that creates this file; it appears in the tree once that step is done. */
   stepId: string;
-  load: () => Promise<string>;
+  /** The file's text, or text plus a note such as "only the first 400 KB is shown". */
+  load: () => Promise<string | LoadedFile>;
 };
 
 const text = (content: string) => () => Promise.resolve(content);

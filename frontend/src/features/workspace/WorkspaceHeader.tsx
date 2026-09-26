@@ -4,6 +4,7 @@ import { useMe } from "../../api/auth";
 import type { Project } from "../../api/projects";
 import AccountMenu from "../../components/AccountMenu";
 import StatusBadge from "../../components/StatusBadge";
+import ThemeToggleButton from "../../components/ThemeToggleButton";
 import DeployButton from "../deploy/DeployButton";
 import GitHubButton from "../github/GitHubButton";
 import ShareButton from "../team/ShareButton";
@@ -32,6 +33,7 @@ export default function WorkspaceHeader({ project }: { project: Project }) {
       <ShareButton project={project} />
       <GitHubButton project={project} />
       <DeployButton project={project} />
+      <ThemeToggleButton />
       {me.data && <AccountMenu user={me.data} />}
     </header>
   );

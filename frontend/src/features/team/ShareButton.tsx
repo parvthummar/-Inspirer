@@ -40,7 +40,7 @@ export default function ShareButton({ project }: { project: Project }) {
         {joined.length > 0 ? (
           <span className="flex -space-x-1.5" aria-hidden>
             {joined.slice(0, 3).map((member) => (
-              <span key={member.id} className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[9px] font-semibold text-panel ring-2 ring-panel">
+              <span key={member.id} className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[9px] font-semibold text-on-accent ring-2 ring-panel">
                 {initials(member.name)}
               </span>
             ))}

@@ -36,8 +36,8 @@ Must really work (Phase 1):
 Dummy (realistic fake behaviour):
 
 - The build itself. The backend returns a scripted sequence of build steps and the frontend animates them with realistic timing.
-- The app preview. It shows one of a few pre-made sample apps stored in the frontend. OpenAI picks the closest one from a fixed list of template keys.
-- Generated files in Developer view. They come from the same sample app, shown as read-only code.
+- The app preview. It is a website-style mock-up generated from the project's plan (`features/site-preview/`): navigation from its pages, a landing page from its summary and agents, and a fitting layout per page (list, form, chat, dashboard, calendar, sign-in), filled with example content. It doesn't run the project's code.
+- Generated files in Developer view (projects Architect built): example source from the pre-made sample apps plus files generated from the plan, shown as read-only code. Imported GitHub projects show their real code instead.
 - GitHub, deploy, import and agent testing flows (Phase 2). Buttons, modals and status changes all work visually, backed by fake data.
 
 Rule for dummy flows: they must look and feel real. Use real-looking data, realistic delays (300 ms to 2 s per step), and correct loading, success and error states. Never show "TODO", "Coming soon" or lorem ipsum in the UI.
@@ -63,7 +63,7 @@ Backend (`/backend`):
 
 Local development: PostgreSQL runs in Docker via `docker-compose.yml`. Frontend and backend run directly on the machine.
 
-Deployment (later): frontend on Vercel, backend on Render or Railway, database on Neon or Supabase Postgres.
+Deployment: frontend on Vercel (root `frontend/`, `vercel.json` proxies `/api/*` to the backend so the login cookie is first-party, and sends other paths to `index.html`), backend on Render (`render.yaml` blueprint; runs `alembic upgrade head` on start), database on Neon. `DATABASE_URL` accepts Neon's `postgresql://...` URL as is (the psycopg driver is added in `config.py`). `FRONTEND_ORIGIN` can list several origins, comma-separated. `VITE_API_URL` stays unset on Vercel.
 
 ## Folder structure
 
@@ -103,7 +103,7 @@ Deployment (later): frontend on Vercel, backend on Render or Railway, database o
 ## Data model (Phase 1)
 
 - `users`: id (UUID), email (unique), name, password_hash, auth_provider ("email" now, "google" later), created_at
-- `projects`: id, user_id, name, description, initial_prompt, view_mode ("simple" or "developer"), status ("draft", "planning", "building", "ready", "error"), template_key (nullable), created_at, updated_at
+- `projects`: id, user_id, name, description, initial_prompt, view_mode ("simple" or "developer", default "developer"), status ("draft", "planning", "building", "ready", "error"), template_key (nullable), created_at, updated_at
 - `messages`: id, project_id, role ("user" or "assistant"), content (text), steps (JSONB, list of action steps shown under an assistant message), created_at
 - `plans`: id, project_id, content (JSONB with agents, pages, integrations), status ("proposed", "approved", "revised"), created_at
 
@@ -150,6 +150,12 @@ Checkpoints:
 Usage:
 - `GET /api/usage` returns credits used this month (plans 5, chat replies 1, builds 10; Starter plan 500 credits, resets on the 1st), with a breakdown by kind and by project.
 
+GitHub import (real, public repositories):
+- `GET /api/github/analyze?repo=owner/name` reads a public repository (metadata, languages, file list, README, dependency files) and returns a summary: description, stack, pages, services, languages, notes. Cached per server process.
+- `POST /api/projects` accepts an optional `source` ({type: "github", owner, name}); the server re-reads the repository and stores it in `projects.source` (with the file list).
+- `GET /api/projects/{id}/files` lists the imported repository's files; `GET /api/projects/{id}/files/content?path=` returns one file's text (from raw.githubusercontent.com, only for paths in the imported list; binary and >400 KB files are flagged).
+- `POST /api/projects/{id}/files/pull` reads the imported repository again from GitHub (ignoring the cache), updates the stored file list and returns how many files were added, removed or changed.
+
 ## OpenAI usage
 
 - All OpenAI calls live in `backend/app/services/openai_service.py`. Routers never call OpenAI directly.
@@ -170,6 +176,7 @@ OPENAI_MODEL=
 FRONTEND_ORIGIN=http://localhost:5173
 COOKIE_SECURE=false
 GOOGLE_CLIENT_ID=
+GITHUB_TOKEN=            # optional; raises GitHub's limit from 60 to 5000 requests an hour
 ```
 
 Frontend `.env`:
@@ -213,6 +220,8 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
   - `--line` #DCE2E8 (borders)
   - `--accent` #3355FF (primary actions, active states, the build progress)
   - `--danger` #D0342C, `--success` #1F8A5B
+  - `--on-accent` (white): text on solid accent, danger or success backgrounds. `--terminal` / `--terminal-ink`: log panels, dark in both themes.
+  - Dark theme: warm graphite (surface #121110, panel #1B1A18, text #ECE8E1, muted #A39E95, line #2E2C29) with a soft periwinkle accent #93A4FF and dark text on accent buttons; all text pairs checked at 6.5:1 or better. Defined under `:root[data-theme="dark"]` in `tokens.css`. Never hard-code colours (including glows: use `rgb(var(--accent-rgb)/…)`); use tokens so both themes work.
 - Fonts: IBM Plex Sans for the interface, IBM Plex Mono only for code, file names and logs.
 - Sentence case for all text. No all-caps labels. No emoji in the UI.
 - Button text says exactly what happens ("Approve plan", "Deploy to production"), and the same word is used in the resulting message ("Plan approved").
@@ -224,7 +233,8 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
 ## Pages and layout (Phase 1)
 
 - `/login` and `/signup`: single centered form, link between them.
-- `/` (dashboard): large prompt box at the top ("Describe the app you want to build"), an "Import a project" secondary action next to it (opens a dummy modal for now), then the user's projects as a list or grid with name, status and last updated time, then a small row of starter templates.
+- `/` (home): sidebar layout; the prompt box ("Describe the app you want to build") centred on the page; a "+" button in the bottom-left of the prompt box opens the import dialog.
+- `/projects`: all projects as a grid with name, status and last updated time. `/templates`: starter templates; picking one fills the prompt on the home page.
 - `/project/:id` (workspace): header with project name (editable), Simple/Developer toggle, and a Deploy button (disabled in Phase 1 with a tooltip). Left panel is the chat, with the plan shown as a special message that has Approve and Edit buttons. Right panel is the preview; in Developer view the right panel gets tabs: Preview, Code, Logs.
 
 ## Coding conventions
@@ -292,8 +302,25 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
 - [x] Phase 2: checkpoints (real). Messages store a snapshot of project state (`messages.snapshot`, migration `9ef303305319`) whenever Architect posts one; "Restore to here" on hover in the chat, with confirmation, removes later messages and plan versions and restores status, name, template, build and plan statuses. Agent settings, GitHub and deploy state (browser-only) are not rolled back.
 - [x] Phase 2: click-to-edit in the preview. "Click to edit" toggle in the browser frame; hover outlines elements with a name, click opens a popover. Text, colour, size, bold, rounded and hide are applied instantly (DOM overrides kept per project in the browser, tied to the chat message so checkpoint restores undo them) and confirmed in chat via `POST /edits`; other requests go to Architect as a normal chat message with the element as context.
 - [x] Phase 3: usage and credits meter. Real usage counted from the database (`usage_service.py`); credits left and a bar in the dashboard header (red from 80%), "Usage and credits" in the account menu; dialog with breakdown, per-project bars and plans (upgrade is a request, no payment).
-- [x] Phase 3: onboarding. Three-step welcome tour for users with no projects (ends in the prompt box), and a dismissible "Getting started" checklist on the dashboard ticked off from real project data. Flags kept per user in the browser.
+- [x] Phase 3: onboarding. Welcome tour (four steps: Simple vs Developer view with the toggle first, then describe, plan, build) for users with no projects (ends in the prompt box). The flag is kept per user in the browser. (A "Getting started" checklist was added and later removed at the user's request.)
 - [x] Phase 3: settings page at `/settings/:section`. Profile (name and password, real), connected accounts (GitHub shares the workspace connection; Slack and Google Drive simulated), API keys (create once-shown key, masked list, revoke; browser only), billing and usage (shared `UsageSummary`, invoices empty state). Linked from the account menu.
 - [x] Phase 3: agent monitoring (dummy). Monitor tab in both views once built: stat tiles, conversations-per-hour chart, filters (all / needs attention, agent, 24 h / 7 days), live run list, run detail with conversation, step trace (tool calls, timings, tokens in Developer view), and failures explained in plain words with "Fix it for me". Runs generated from the approved plan (`mocks/monitorData.ts`), repeatable per project.
 - [x] Phase 3: team and comments (dummy, browser only). Share button in the workspace header: invite by email as Editor or Viewer, change role, remove, resend, link sharing for the preview; invites are accepted automatically after a few seconds. Comment mode in the preview toolbar: click to drop numbered pins (per app page), threads with replies, resolve/reopen, show resolved; joined teammates reply after a few seconds.
+- [x] Fix: switching agent framework crashed the page (infinite update loop in `FrameworkPicker`: the save ran in an effect that depended on a callback recreated by the save). Finishing now happens in the timer with the callback in a ref; same hardening in `RepoSetupProgress`.
+- [x] Demo labels: `DemoBadge` (hover/focus explanation) and `DemoNotice` (banner) mark every simulated area: preview "Sample data", simulated build, Monitor, Code "Example code", Logs, import summary, Deploy, GitHub, Share, comment replies, Agents, connected accounts, API keys, plans.
+- [x] App shell with sidebar for the dashboard and settings (`components/AppShell.tsx`, `Sidebar.tsx`): logo, New project (focuses the prompt), Home / Templates / Settings, recent projects with a status line ("Ready to try", "Pick up where you left off", "Drafting a plan…", "Building now…", "Needs your attention") and last-updated time, upgrade card with plan and credits, profile menu opening upwards; credits pill in the top-right; slide-in drawer below the `lg` breakpoint. The workspace keeps its own header. `AppHeader` removed.
+- [x] Home is just the prompt (centred); the Getting started checklist was removed; projects and templates moved to their own pages (`/projects`, `/templates`) linked from the sidebar.
+- [x] Resizable sidebar (200 to 400 px, default 256): drag the edge, arrow keys, double-click to reset; width remembered in the browser. The drag handle is now the shared `components/PanelResizer.tsx`, also used between chat and preview.
+- [x] Hideable sidebar: hide button next to the logo, dragging the edge to within about an inch (96 px) of the window edge (or pressing left at the minimum) hides it, Ctrl/Cmd+B toggles it, and a show button appears at the top left when hidden. It comes back at its previous width; hidden state is remembered in the browser.
+- [x] Prompt box: import is a "+" button in its bottom-left, the shortcut hint was removed, and any non-blank prompt (1+ characters) can be planned; the backend trims and accepts 1 to 4000 characters.
+- [x] Fix: in the workspace the whole page scrolled (chat, file tree and code moved together). The Code tab's grid row grew with its content, and the chart's screen-reader table escaped its panel. Now the workspace never scrolls, each tab panel clips to its space, the Code grid row is capped (`grid-rows-[minmax(0,1fr)]`), and the file tree and code scroll separately. Checked in headless Chrome on all five tabs.
+- [x] Code tab: the divider between the file list and the code is draggable (160 to 480 px, default 220), with arrow keys and double-click to reset; the width is remembered in the browser. Uses the shared `PanelResizer`.
+- [x] Real GitHub import: the import review reads the actual public repository (`github_service.py`, migration `f9143ff94903` adds `projects.source`), the first plan is written from the real README and stack, and the Code tab of imported projects shows the repository's real files (available before any build), with a link to GitHub. The preview is still an example app. Zip and other-platform imports are still simulated.
+- [x] New projects open in Developer view (model default and migration `0ead0f30fde5`); existing projects keep their view, and the toggle still switches per project.
+- [x] Light, dark and system themes: `lib/theme.ts` (choice saved in the browser, follows the OS on "System"), an inline script in `index.html` applies it before first paint, `ThemeSwitcher` in the account menu and Settings > Profile > Appearance, plus a one-click sun/moon `ThemeToggleButton` in the top bar (next to the credits pill, and next to the avatar in the workspace). Text on solid colours uses `text-on-accent`; log panels use the `terminal` colours. Checked in headless Chrome.
+- [x] Dark theme restyled to warm graphite with a periwinkle accent (was blue-grey with electric blue); home prompt box tightened (2 rows, less padding).
+- [x] Dark is the default for anyone who hasn't chosen a theme (`DEFAULT_THEME` in `lib/theme.ts`, kept in step with the `index.html` script); a saved Light or System choice is kept.
+- [x] Preview is now a website mock-up generated from the plan (`PlanSite`), replacing the pre-made sample apps in the preview, build reveal and full-page preview (they remain as example code in the Code tab). Each project gets its own brand colour; works with device sizes, dark mode, click-to-edit and comments. Labelled "Mock-up".
+- [x] Code tab toolbar. Built projects: "Download code" zips every file in the browser (`lib/zip.ts`, a small store-only zip writer, no library) and "Sync with GitHub" opens the (simulated) GitHub dialog. Imported repositories: "Download code" is GitHub's own branch zip, "Pull latest" really re-reads the repo, plus "Open on GitHub"; pushing back needs GitHub sign-in (not in the prototype).
 - [x] Phase 2: Google sign-in (real). Google Identity Services button on login and signup; backend verifies the ID token with PyJWT (`pyjwt[crypto]`) against Google's public keys. Only the OAuth client ID is needed (no secret). Google-only accounts have no password (`has_password` false) and get a clear message on password login. When deploying, add the production frontend URL to Authorized JavaScript origins in Google Cloud.
+- [x] Hosting prepared (Vercel proxy, Render blueprint in Ohio next to Neon us-east-2, Neon URL handling). Migrations applied on Neon and an end-to-end API check passed there (signup, login, project, plan, chat, approve, build, view toggle, usage, delete). Vercel and Render not deployed yet.

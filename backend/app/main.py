@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.deps import get_db
-from app.routers import auth, build, chat, checkpoints, plans, projects, usage
+from app.routers import auth, build, chat, checkpoints, github, plans, projects, usage
 
 settings = get_settings()
 
@@ -15,7 +15,7 @@ app = FastAPI(title="Architect API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin],
+    allow_origins=settings.frontend_origins,
     allow_credentials=True,  # needed for the httpOnly auth cookie
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,6 +28,7 @@ app.include_router(plans.router)
 app.include_router(build.router)
 app.include_router(checkpoints.router)
 app.include_router(usage.router)
+app.include_router(github.router)
 
 
 def _describe_validation_error(error: dict) -> str:
@@ -43,7 +44,7 @@ def _describe_validation_error(error: dict) -> str:
     if field == "feedback":
         return "Tell Architect what to change in the plan."
     if field == "prompt":
-        return "Describe your app in a few more words so Architect can plan it."
+        return "Describe the app you want to build."
     return f"Check the {field} field: {error.get('msg', 'invalid value')}."
 
 

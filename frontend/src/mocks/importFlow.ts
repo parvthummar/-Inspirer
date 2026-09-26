@@ -21,6 +21,16 @@ export function importSteps(source: ImportSource, label: string): ImportStep[] {
   ];
 }
 
+/** Steps shown while a GitHub repository is really being read. The last one stays until the answer arrives. */
+export function githubReadSteps(label: string): ImportStep[] {
+  return [
+    { label: `Connecting to ${label}`, durationMs: 500 },
+    { label: "Reading the file list", durationMs: 700 },
+    { label: "Reading the README and dependencies", durationMs: 800 },
+    { label: "Working out the stack, pages and services", durationMs: 700 },
+  ];
+}
+
 const GITHUB_URL = /^(?:https?:\/\/)?(?:www\.)?github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/i;
 
 /** Returns "owner/repo" for a GitHub URL, or null if the URL isn't a repository link. */

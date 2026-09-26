@@ -49,7 +49,7 @@ export default function DeployProgress({ active, elapsed, developer }: DeployPro
         ))}
       </ol>
       {developer && (
-        <pre className="mt-3 max-h-40 overflow-y-auto rounded-md bg-ink p-3 font-mono text-[11px] leading-5 text-panel/80">
+        <pre className="mt-3 max-h-40 overflow-y-auto rounded-md bg-terminal p-3 font-mono text-[11px] leading-5 text-terminal-ink/80">
           {logs.join("\n")}
         </pre>
       )}

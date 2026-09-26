@@ -15,7 +15,7 @@ const icons = { trigger: Zap, agent: Bot, tool: Wrench, integration: Link2, hand
 
 const styles = {
   trigger: "border-ink bg-ink text-panel",
-  agent: "border-accent/50 bg-panel shadow-[0_2px_8px_rgba(51,85,255,0.12)]",
+  agent: "border-accent/50 bg-panel shadow-[0_2px_8px_rgb(var(--accent-rgb)/0.12)]",
   tool: "border-line bg-panel",
   integration: "border-dashed border-line bg-panel",
   handoff: "border-dashed border-line bg-surface",
@@ -27,7 +27,7 @@ export default function CanvasNodeCard({ node, sublabel, selected, dimmed, mono,
     <>
       <span
         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
-          node.kind === "agent" ? "bg-accent text-panel" : node.kind === "trigger" ? "bg-panel/15" : "bg-surface text-muted"
+          node.kind === "agent" ? "bg-accent text-on-accent" : node.kind === "trigger" ? "bg-panel/15" : "bg-surface text-muted"
         }`}
       >
         <Icon className="h-3.5 w-3.5" aria-hidden />

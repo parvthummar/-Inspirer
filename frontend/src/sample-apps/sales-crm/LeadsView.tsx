@@ -69,7 +69,7 @@ export default function LeadsView({ leads, onSend, compact }: LeadsViewProps) {
               <button
                 type="button"
                 onClick={() => onSend(selected.id)}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-panel"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-on-accent"
               >
                 <Send className="h-3.5 w-3.5" aria-hidden />
                 Send email

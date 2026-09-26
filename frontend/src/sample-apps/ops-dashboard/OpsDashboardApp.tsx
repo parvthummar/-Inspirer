@@ -69,7 +69,7 @@ export default function OpsDashboardApp({ appName, compact }: SampleAppProps) {
                   type="button"
                   onClick={() => setFilter(option)}
                   aria-pressed={filter === option}
-                  className={`rounded-full px-2.5 py-1 text-xs ${filter === option ? "bg-accent text-panel" : "bg-panel text-muted ring-1 ring-line"}`}
+                  className={`rounded-full px-2.5 py-1 text-xs ${filter === option ? "bg-accent text-on-accent" : "bg-panel text-muted ring-1 ring-line"}`}
                 >
                   {option}
                 </button>

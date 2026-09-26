@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useMe } from "../../api/auth";
 import type { Build } from "../../api/build";
 import type { Project } from "../../api/projects";
+import DemoNotice from "../../components/DemoNotice";
 import Modal from "../../components/Modal";
 import { useToast } from "../../components/toast-context";
 import { slug } from "../../mocks/generatedFiles";
@@ -92,6 +93,9 @@ export default function GitHubDialog({ project, build, onClose }: GitHubDialogPr
 
   return (
     <Modal title={title} description={description} onClose={onClose} dismissible={!choice}>
+      <div className="mb-4">
+        <DemoNotice>GitHub is simulated in this prototype: no real account is connected and no repository is created.</DemoNotice>
+      </div>
       {body}
     </Modal>
   );
