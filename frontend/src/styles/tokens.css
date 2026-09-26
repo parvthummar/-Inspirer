@@ -1,0 +1,14 @@
+/* Design tokens. Tailwind reads these via tailwind.config.js; use only these colors. */
+:root {
+  --surface: #f4f6f8;
+  --panel: #ffffff;
+  --ink: #16202a;
+  --muted: #5b6875;
+  --line: #dce2e8;
+  --accent: #3355ff;
+  --danger: #d0342c;
+  --success: #1f8a5b;
+
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}

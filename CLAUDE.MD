@@ -260,4 +260,5 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
 
 ## Progress
 
-- [ ] Phase 1, step 1: repo setup
+- [x] Phase 1, step 1: repo setup (Docker Postgres 16, FastAPI skeleton with `/api/health`, Alembic wired to settings, Vite React 18 + TS, Tailwind with design tokens)
+- [ ] Phase 1, step 2: database models and first Alembic migration
