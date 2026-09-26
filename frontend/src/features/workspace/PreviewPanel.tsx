@@ -8,6 +8,8 @@ import { sampleAppFor } from "../../sample-apps";
 import BrowserFrame, { type Device } from "./BrowserFrame";
 import BuildReveal from "./BuildReveal";
 import PreviewPlaceholder from "./PreviewPlaceholder";
+import CommentLayer from "../comments/CommentLayer";
+import { useComments } from "../comments/commentStore";
 import EditLayer from "../visual-edit/EditLayer";
 import ReadyBanner from "./ReadyBanner";
 import type { BuildProgress } from "./useBuildProgress";
@@ -23,7 +25,12 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
   const [device, setDevice] = useState<Device>("desktop");
   const [reloadKey, setReloadKey] = useState(0);
   const [reloading, setReloading] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [mode, setMode] = useState<"none" | "edit" | "comment">("none");
+  const [showResolved, setShowResolved] = useState(false);
+  const { comments } = useComments(project.id);
+  const editing = mode === "edit";
+  const commenting = mode === "comment";
+  const openComments = comments.filter((c) => !c.resolved).length;
   const startBuild = useStartBuild(project.id);
 
   // Celebrate only when a build finishes while the user is watching, not on every visit.
@@ -108,9 +115,20 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
               Click anything in your app to change it. Press Done editing when you're finished.
             </p>
           )}
-          <EditLayer project={project} editing={editing}>
-            <App key={reloadKey} appName={project.name} compact={compact} />
-          </EditLayer>
+          {commenting && (
+            <div className="absolute inset-x-0 bottom-3 z-40 mx-auto flex w-fit items-center gap-3 rounded-full bg-ink px-3 py-1 text-xs text-panel shadow-lg" data-comment-ui>
+              Click anywhere to leave a comment
+              <label className="flex cursor-pointer items-center gap-1.5 text-panel/80">
+                <input type="checkbox" checked={showResolved} onChange={() => setShowResolved((v) => !v)} className="accent-[rgb(var(--accent-rgb))]" />
+                Show resolved
+              </label>
+            </div>
+          )}
+          <CommentLayer project={project} commenting={commenting} showResolved={showResolved}>
+            <EditLayer project={project} editing={editing}>
+              <App key={reloadKey} appName={project.name} compact={compact} />
+            </EditLayer>
+          </CommentLayer>
         </div>
       );
       break;
@@ -126,7 +144,10 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
         onReload={reload}
         onOpenInNewTab={() => window.open(`/project/${project.id}/preview`, "_blank", "noopener")}
         editing={editing && project.status === "ready"}
-        onToggleEditing={() => setEditing((value) => !value)}
+        onToggleEditing={() => setMode((current) => (current === "edit" ? "none" : "edit"))}
+        commenting={commenting && project.status === "ready"}
+        onToggleCommenting={() => setMode((current) => (current === "comment" ? "none" : "comment"))}
+        openComments={openComments}
       >
         {content}
       </BrowserFrame>

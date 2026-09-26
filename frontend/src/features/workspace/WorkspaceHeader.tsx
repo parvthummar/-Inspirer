@@ -6,6 +6,7 @@ import AccountMenu from "../../components/AccountMenu";
 import StatusBadge from "../../components/StatusBadge";
 import DeployButton from "../deploy/DeployButton";
 import GitHubButton from "../github/GitHubButton";
+import ShareButton from "../team/ShareButton";
 import ProjectNameEditor from "./ProjectNameEditor";
 import ViewModeToggle from "./ViewModeToggle";
 
@@ -28,6 +29,7 @@ export default function WorkspaceHeader({ project }: { project: Project }) {
         <StatusBadge status={project.status} />
       </div>
       <ViewModeToggle project={project} />
+      <ShareButton project={project} />
       <GitHubButton project={project} />
       <DeployButton project={project} />
       {me.data && <AccountMenu user={me.data} />}
