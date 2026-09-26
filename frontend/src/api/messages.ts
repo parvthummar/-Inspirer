@@ -3,7 +3,7 @@ import { apiFetch } from "./client";
 import type { Plan } from "./plans";
 import { projectKeys } from "./projects";
 
-export type MessageStep = { label: string; status?: "done" | "running" | "failed" };
+export type MessageStep = { label: string; status?: "done" | "running" | "pending" | "failed" };
 
 export type Message = {
   id: string;
@@ -63,6 +63,8 @@ export function useSendMessage(projectId: string) {
         ...saved,
       ]);
       void queryClient.invalidateQueries({ queryKey: projectKeys.all, exact: true });
+      // The reply may have started a plan revision, which changes the project's status.
+      void queryClient.invalidateQueries({ queryKey: projectKeys.detail(projectId), exact: true });
     },
   });
 }

@@ -10,8 +10,14 @@ import MessagesSkeleton from "./MessagesSkeleton";
 import MissingPlanNotice from "./MissingPlanNotice";
 import PlanningIndicator from "./PlanningIndicator";
 import ThinkingIndicator from "./ThinkingIndicator";
+import type { BuildProgress } from "./useBuildProgress";
 
-export default function ChatPanel({ project }: { project: Project }) {
+type ChatPanelProps = {
+  project: Project;
+  progress: BuildProgress | null;
+};
+
+export default function ChatPanel({ project, progress }: ChatPanelProps) {
   const messages = useMessages(project.id);
   const sendMessage = useSendMessage(project.id);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -20,20 +26,21 @@ export default function ChatPanel({ project }: { project: Project }) {
   const planning = project.status === "planning";
   const hasPlan = messages.data?.some((message) => message.plan) ?? false;
 
-  // When the plan finishes in the background, load the message that carries it.
-  const wasPlanning = useRef(planning);
+  // When background work (a plan or a build) finishes, load the messages it added.
+  const working = planning || project.status === "building";
+  const wasWorking = useRef(working);
   useEffect(() => {
-    if (wasPlanning.current && !planning) {
+    if (wasWorking.current !== working) {
       void queryClient.invalidateQueries({ queryKey: messageKeys.list(project.id) });
     }
-    wasPlanning.current = planning;
-  }, [planning, project.id, queryClient]);
+    wasWorking.current = working;
+  }, [working, project.id, queryClient]);
 
   // Keep the newest message in view.
   useEffect(() => {
     const scroller = scrollRef.current;
     if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: count > 0 ? "smooth" : "auto" });
-  }, [count, sendMessage.isPending, planning]);
+  }, [count, sendMessage.isPending, working]);
 
   return (
     <section aria-label="Chat" className="flex h-full min-h-0 flex-col bg-panel">
@@ -52,7 +59,19 @@ export default function ChatPanel({ project }: { project: Project }) {
         {messages.data && (
           <ol className="space-y-6 px-4 py-5" aria-live="polite">
             {messages.data.map((message) => (
-              <ChatMessage key={message.id} message={message} project={project} />
+              <ChatMessage
+                key={message.id}
+                message={message}
+                project={project}
+                liveSteps={
+                  project.status === "building" && progress && message.id === progress.build.message_id
+                    ? progress.build.steps.map((step, index) => ({
+                        label: project.view_mode === "developer" ? step.dev_label : step.label,
+                        status: progress.stepStates[index],
+                      }))
+                    : undefined
+                }
+              />
             ))}
             {planning && <PlanningIndicator projectId={project.id} revising={hasPlan} />}
             {project.status === "draft" && !hasPlan && <MissingPlanNotice projectId={project.id} />}

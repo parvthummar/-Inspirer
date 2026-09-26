@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.models import Message, Plan, Project
 from app.schemas.plan import PlanContent
-from app.services import openai_service
+from app.services import build_simulator, openai_service
 from app.services.project_service import draft_name_from_prompt
 
 logger = logging.getLogger(__name__)
@@ -134,17 +134,19 @@ def update_plan(db: Session, project: Project, content: PlanContent) -> Plan:
 
 
 def approve_plan(db: Session, project: Project) -> Plan:
+    """Approve the proposed plan and start building from it."""
     plan = _proposed_plan(db, project)
     plan.status = "approved"
-    project.template_key = plan.content.get("template_key")
     db.add(
         Message(
             project_id=project.id,
             role="assistant",
-            content="Plan approved. I'll build your app from this plan.",
+            content="Plan approved. Starting the build now.",
             created_at=func.clock_timestamp(),
         )
     )
+    db.flush()
+    build_simulator.start_build(db, project)
     db.commit()
     db.refresh(plan)
     return plan

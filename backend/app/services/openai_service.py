@@ -2,6 +2,7 @@
 
 import json
 import logging
+from dataclasses import dataclass, field
 from typing import Literal
 
 from openai import OpenAI
@@ -19,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 ViewMode = Literal["simple", "developer"]
 REQUEST_TIMEOUT_SECONDS = 45
+# Output caps keep every call cheap: a plan is ~400 tokens of JSON, a chat reply ~200.
+PLAN_MAX_OUTPUT_TOKENS = 1200
+CHAT_MAX_OUTPUT_TOKENS = 500
 
 
 class AgentSpec(BaseModel):
@@ -109,6 +113,7 @@ def _request_plan(
         model=get_settings().openai_model,
         messages=messages,
         response_format=PlanDraft,
+        max_completion_tokens=PLAN_MAX_OUTPUT_TOKENS,
     )
     parsed = completion.choices[0].message.parsed
     if parsed is None:
@@ -190,3 +195,128 @@ def plan_from_content(project_name: str, content: dict) -> PlanDraft | None:
     except Exception:
         logger.warning("Stored plan content could not be parsed: %s", json.dumps(content)[:200])
         return None
+
+
+# ---------------------------------------------------------------------------
+# Chat replies
+# ---------------------------------------------------------------------------
+
+CHAT_HISTORY_LIMIT = 20
+
+
+class ChatDecision(BaseModel):
+    """The model's reply, plus whether the user's message asks for a change to the plan."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    reply: str
+    revise_plan: bool
+
+
+@dataclass
+class ChatContext:
+    project_name: str
+    initial_prompt: str
+    view_mode: ViewMode
+    project_status: str
+    plan: dict | None = None
+    plan_status: str | None = None
+    # (role, content) pairs, oldest first, not including the new message.
+    history: list[tuple[str, str]] = field(default_factory=list)
+
+    @property
+    def plan_can_change(self) -> bool:
+        return self.plan is not None and self.project_status == "draft"
+
+
+_STATUS_MEANING = {
+    "draft": "The app has not been built yet.",
+    "planning": "You are writing the plan right now.",
+    "building": "The app is being built right now.",
+    "ready": "The app has been built and is showing in the preview.",
+    "error": "The last build failed.",
+}
+
+
+def _chat_system_prompt(context: ChatContext) -> str:
+    if context.view_mode == "simple":
+        voice = (
+            "The user is not technical. Use plain, friendly language. Never mention code, frameworks, databases, "
+            "APIs or error messages. Explain things by what the app does for people."
+        )
+    else:
+        voice = "The user is a developer. You may use precise technical terms, file names and framework names."
+
+    if context.plan is None:
+        plan_text = "There is no plan yet."
+    else:
+        plan_text = f"Current plan ({context.plan_status}):\n{json.dumps(context.plan, indent=1)}"
+
+    if context.plan_can_change:
+        plan_rule = (
+            "If the user asks to change the plan (add, remove or change agents, pages, integrations or what the app "
+            "does), set revise_plan to true and reply in one short sentence that you are updating the plan; the "
+            "updated plan appears below your reply automatically. Otherwise set revise_plan to false."
+        )
+    else:
+        plan_rule = "Always set revise_plan to false."
+
+    return f"""You are Architect, an assistant that plans and builds agentic apps (apps where AI agents do work for people).
+You are chatting with the user inside their project.
+
+{voice}
+
+Project: {context.project_name}
+What the user originally asked for: {context.initial_prompt}
+Status: {_STATUS_MEANING.get(context.project_status, "")}
+{plan_text}
+
+Rules:
+- Be concise: at most 120 words. No headings. Short lists only when they help.
+- Never claim you did something you did not do. You cannot build or change the app from chat; building starts when the
+  user presses "Approve plan" on the plan card.
+- If the user wants to start building and there is a proposed plan, tell them to press "Approve plan".
+- Answer questions about the plan, agents, pages, integrations or next steps helpfully and specifically.
+- {plan_rule}"""
+
+
+def _fallback_chat(context: ChatContext) -> ChatDecision:
+    if context.plan_can_change and context.plan_status == "proposed":
+        reply = (
+            "I can't reply properly right now because the AI service isn't reachable. You can still approve the "
+            "plan, edit it yourself, or use \"Ask for changes\" on the plan card."
+        )
+    else:
+        reply = "I can't reply properly right now because the AI service isn't reachable. Please try again in a moment."
+    return ChatDecision(reply=reply, revise_plan=False)
+
+
+def chat_reply(context: ChatContext, message: str) -> tuple[ChatDecision, bool]:
+    """Reply to a chat message. Retries once, then falls back. Never raises. Returns (decision, used_ai)."""
+    client = _client()
+    if client is None:
+        logger.warning("OPENAI_API_KEY or OPENAI_MODEL is not set; using the fallback chat reply.")
+        return _fallback_chat(context), False
+
+    messages = [{"role": "system", "content": _chat_system_prompt(context)}]
+    messages += [{"role": role, "content": content} for role, content in context.history[-CHAT_HISTORY_LIMIT:]]
+    messages.append({"role": "user", "content": message})
+
+    for attempt in (1, 2):
+        try:
+            completion = client.beta.chat.completions.parse(
+                model=get_settings().openai_model,
+                messages=messages,
+                response_format=ChatDecision,
+                max_completion_tokens=CHAT_MAX_OUTPUT_TOKENS,
+            )
+            parsed = completion.choices[0].message.parsed
+            if parsed is None or not parsed.reply.strip():
+                raise ValueError("The model returned an empty reply")
+            decision = ChatDecision.model_validate(parsed.model_dump())
+            # Only allow a plan revision when there is a plan that can still change.
+            decision.revise_plan = decision.revise_plan and context.plan_can_change
+            return decision, True
+        except Exception:
+            logger.exception("Chat reply failed (attempt %s of 2)", attempt)
+    return _fallback_chat(context), False

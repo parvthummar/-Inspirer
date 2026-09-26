@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Message, Project, User
 from app.schemas.project import ProjectUpdate
+from app.services import build_simulator
 
 MAX_NAME_LENGTH = 60
 _FILLER = re.compile(
@@ -36,7 +37,10 @@ def draft_name_from_prompt(prompt: str) -> str:
 
 def list_projects(db: Session, user: User) -> list[Project]:
     query = select(Project).where(Project.user_id == user.id).order_by(Project.updated_at.desc())
-    return list(db.scalars(query))
+    projects = list(db.scalars(query))
+    for project in projects:
+        build_simulator.finish_if_done(db, project)
+    return projects
 
 
 def get_project(db: Session, user: User, project_id: uuid.UUID) -> Project:
@@ -47,6 +51,7 @@ def get_project(db: Session, user: User, project_id: uuid.UUID) -> Project:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="We couldn't find that project. It may have been deleted.",
         )
+    build_simulator.finish_if_done(db, project)
     return project
 
 

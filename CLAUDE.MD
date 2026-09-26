@@ -138,6 +138,7 @@ Chat and plan:
 Build (dummy):
 - `POST /api/projects/{id}/build` starts a simulated build and sets status to "building"
 - `GET /api/projects/{id}/build` returns the scripted steps with their timings, and the final status
+- Approving the plan starts the build automatically; `POST /build` is used to rebuild (e.g. "Fix it for me").
 
 ## OpenAI usage
 
@@ -268,4 +269,6 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
 - [x] Phase 1, step 4: dashboard (prompt box, project grid with delete, starter templates, dummy import modal for GitHub/zip/other platform). Project name is drafted from the prompt until OpenAI names it in step 6.
 - [x] Phase 1, step 5: workspace layout (header with rename, Simple/Developer toggle saved per project, disabled Deploy with tooltip; resizable chat panel with real messages; preview panel in a browser frame with device sizes and per-status placeholders). Assistant replies are a fixed placeholder until step 7.
 - [x] Phase 1, step 6: OpenAI plan generation in the background (structured output, one retry, fallback plan), plan card in chat with Approve plan / Edit plan / Ask for changes, earlier versions collapsed, `messages.plan_id` migration. Approving does not start a build yet (step 8).
-- [ ] Phase 1, step 7: chat replies from OpenAI, saved to the database
+- [x] Phase 1, step 7: chat replies from OpenAI with project, plan and last 20 messages as context; structured output decides if a message asks for plan changes and then revises the plan in the background. Fallback reply when OpenAI is unavailable.
+- [x] Phase 1, step 8: approving the plan starts a scripted build (`build_simulator.py`, steps generated from the plan, 0.5 to 2 s each, stored in `projects.build_state`); live steps in chat and a top-to-bottom reveal of the app in the preview; 5 interactive sample apps (support desk, leave tracker, sales CRM, meeting notes, ops dashboard) with their own accent; full-page preview at `/project/:id/preview`; "Fix it for me" rebuilds on error.
+- [x] Phase 1, step 9: Developer view tabs. Preview stays mounted; Code shows a file tree and read-only highlighted viewer (sample-app source via Vite `?raw` plus backend/agent/integration files generated from the approved plan; files appear as build steps finish); Logs is a terminal-style panel with build logs in step with the build and live runtime logs once ready. Simple view shows only the preview.

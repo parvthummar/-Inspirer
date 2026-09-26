@@ -16,10 +16,11 @@ type BrowserFrameProps = {
   /** Controls that only make sense once there is an app to look at. */
   live: boolean;
   onReload?: () => void;
+  onOpenInNewTab?: () => void;
   children: ReactNode;
 };
 
-export default function BrowserFrame({ url, device, onDeviceChange, live, onReload, children }: BrowserFrameProps) {
+export default function BrowserFrame({ url, device, onDeviceChange, live, onReload, onOpenInNewTab, children }: BrowserFrameProps) {
   const width = devices.find((d) => d.value === device)?.width ?? "100%";
 
   return (
@@ -57,6 +58,7 @@ export default function BrowserFrame({ url, device, onDeviceChange, live, onRelo
         </div>
         <button
           type="button"
+          onClick={onOpenInNewTab}
           disabled={!live}
           aria-label="Open in a new tab"
           title={live ? "Open in a new tab" : "Available once your app is built"}

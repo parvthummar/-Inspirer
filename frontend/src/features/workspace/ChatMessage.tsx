@@ -1,4 +1,4 @@
-import type { Message } from "../../api/messages";
+import type { Message, MessageStep } from "../../api/messages";
 import type { Project } from "../../api/projects";
 import ArchitectAvatar from "./ArchitectAvatar";
 import MessageSteps from "./MessageSteps";
@@ -6,7 +6,15 @@ import PlanCard from "./PlanCard";
 
 const timeFormat = new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" });
 
-export default function ChatMessage({ message, project }: { message: Message; project: Project }) {
+type ChatMessageProps = {
+  message: Message;
+  project: Project;
+  /** Live build steps for the message that tracks the running build. */
+  liveSteps?: MessageStep[];
+};
+
+export default function ChatMessage({ message, project, liveSteps }: ChatMessageProps) {
+  const steps = liveSteps ?? message.steps;
   const time = (
     <time
       dateTime={message.created_at}
@@ -41,7 +49,7 @@ export default function ChatMessage({ message, project }: { message: Message; pr
           {time}
         </div>
         <div className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{message.content}</div>
-        {message.steps.length > 0 && <MessageSteps steps={message.steps} />}
+        {steps.length > 0 && <MessageSteps steps={steps} mono={Boolean(liveSteps) && project.view_mode === "developer"} />}
         {message.plan && <PlanCard plan={message.plan} project={project} />}
       </div>
     </li>

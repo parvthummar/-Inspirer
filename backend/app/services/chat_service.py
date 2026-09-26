@@ -1,7 +1,17 @@
+from dataclasses import dataclass
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Message, Project
+from app.services import openai_service, plan_service
+
+
+@dataclass
+class SendResult:
+    messages: list[Message]
+    # True when the reply started a plan revision; the caller runs it in the background.
+    revising_plan: bool
 
 
 def list_messages(db: Session, project: Project) -> list[Message]:
@@ -9,27 +19,41 @@ def list_messages(db: Session, project: Project) -> list[Message]:
     return list(db.scalars(query))
 
 
-def _assistant_reply(project: Project, content: str) -> str:
-    """Placeholder reply until OpenAI chat replies are added in Phase 1, step 7."""
-    return (
-        "Got it. I've added that to this project's notes and will include it when I put together "
-        "the plan for your app."
+def _history_entry(message: Message) -> tuple[str, str]:
+    content = message.content
+    if message.plan is not None:
+        content += f"\n[Plan card shown here, {message.plan.status}]"
+    return message.role, content
+
+
+def _context(db: Session, project: Project) -> openai_service.ChatContext:
+    plan = plan_service.latest_plan(db, project)
+    return openai_service.ChatContext(
+        project_name=project.name,
+        initial_prompt=project.initial_prompt,
+        view_mode=project.view_mode,  # type: ignore[arg-type]
+        project_status=project.status,
+        plan=plan.content if plan else None,
+        plan_status=plan.status if plan else None,
+        history=[_history_entry(message) for message in list_messages(db, project)],
     )
 
 
-def send_message(db: Session, project: Project, content: str) -> list[Message]:
-    """Save the user's message and the assistant's reply. Returns both, oldest first."""
+def send_message(db: Session, project: Project, content: str) -> SendResult:
+    """Save the user's message, get Architect's reply, and save it. Messages are returned oldest first."""
+    content = content.strip()
+    context = _context(db, project)
+    decision, _ = openai_service.chat_reply(context, content)
+
     # clock_timestamp() instead of the default now(): both rows share one transaction, and now()
     # would give them the same time. Using the database clock keeps order consistent with older rows.
-    user_message = Message(
-        project_id=project.id, role="user", content=content.strip(), created_at=func.clock_timestamp()
-    )
+    user_message = Message(project_id=project.id, role="user", content=content, created_at=func.clock_timestamp())
     db.add(user_message)
     db.flush()
     reply = Message(
         project_id=project.id,
         role="assistant",
-        content=_assistant_reply(project, content),
+        content=decision.reply.strip(),
         created_at=func.clock_timestamp(),
     )
     db.add(reply)
@@ -37,4 +61,6 @@ def send_message(db: Session, project: Project, content: str) -> list[Message]:
     db.commit()
     db.refresh(user_message)
     db.refresh(reply)
-    return [user_message, reply]
+
+    revising = decision.revise_plan and plan_service.start_planning(db, project)
+    return SendResult(messages=[user_message, reply], revising_plan=revising)

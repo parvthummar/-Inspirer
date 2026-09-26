@@ -27,14 +27,17 @@ export function useProjects() {
   return useQuery({ queryKey: projectKeys.all, queryFn: () => apiFetch<Project[]>("/api/projects") });
 }
 
-const PLANNING_POLL_MS = 1500;
+const BACKGROUND_WORK_POLL_MS = 1500;
 
 export function useProject(id: string) {
   return useQuery({
     queryKey: projectKeys.detail(id),
     queryFn: () => apiFetch<Project>(`/api/projects/${id}`),
-    // While Architect writes the plan in the background, check back until it's done.
-    refetchInterval: (query) => (query.state.data?.status === "planning" ? PLANNING_POLL_MS : false),
+    // While Architect writes the plan or builds the app, check back until it's done.
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "planning" || status === "building" ? BACKGROUND_WORK_POLL_MS : false;
+    },
   });
 }
 

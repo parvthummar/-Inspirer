@@ -1,12 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from sqlalchemy.orm import Session
 
 from app.deps import get_current_user, get_db
 from app.models import Message, User
 from app.schemas.message import MessageCreate, MessageOut
-from app.services import chat_service, project_service
+from app.services import chat_service, plan_service, project_service
 
 router = APIRouter(prefix="/api/projects/{project_id}", tags=["chat"])
 
@@ -23,8 +23,14 @@ def list_messages(
 def send_message(
     project_id: uuid.UUID,
     body: MessageCreate,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[Message]:
+    """Returns the user's message and Architect's reply. If the message asked for plan changes,
+    the project switches to "planning" and the revised plan follows in the background."""
     project = project_service.get_project(db, user, project_id)
-    return chat_service.send_message(db, project, body.content)
+    result = chat_service.send_message(db, project, body.content)
+    if result.revising_plan:
+        background_tasks.add_task(plan_service.run_planning, project.id, body.content.strip())
+    return result.messages

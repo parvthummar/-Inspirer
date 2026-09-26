@@ -6,8 +6,9 @@ import Button from "../../components/Button";
 import FullPageLoader from "../../components/FullPageLoader";
 import ChatPanel from "./ChatPanel";
 import PanelResizer from "./PanelResizer";
-import PreviewPanel from "./PreviewPanel";
+import { useBuildProgress } from "./useBuildProgress";
 import WorkspaceHeader from "./WorkspaceHeader";
+import WorkspaceRightPanel from "./WorkspaceRightPanel";
 
 const CHAT_WIDTH = { min: 340, max: 600, default: 420 };
 const CHAT_WIDTH_STORAGE_KEY = "architect.chatWidth";
@@ -25,6 +26,7 @@ function readSavedChatWidth(): number {
 export default function WorkspacePage() {
   const { id = "" } = useParams();
   const project = useProject(id);
+  const progress = useBuildProgress(project.data);
   const [chatWidth, setChatWidth] = useState(readSavedChatWidth);
 
   function changeChatWidth(width: number) {
@@ -63,11 +65,11 @@ export default function WorkspacePage() {
       <WorkspaceHeader project={project.data} />
       <div className="flex min-h-0 flex-1">
         <div style={{ width: chatWidth }} className="shrink-0">
-          <ChatPanel project={project.data} />
+          <ChatPanel project={project.data} progress={progress} />
         </div>
         <PanelResizer width={chatWidth} min={CHAT_WIDTH.min} max={CHAT_WIDTH.max} onChange={changeChatWidth} />
         <div className="min-w-0 flex-1">
-          <PreviewPanel project={project.data} />
+          <WorkspaceRightPanel project={project.data} progress={progress} />
         </div>
       </div>
     </div>

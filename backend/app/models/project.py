@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -33,6 +34,8 @@ class Project(UUIDPrimaryKey, CreatedAt, Base):
     view_mode: Mapped[str] = mapped_column(String(20), default="simple", server_default="simple")
     status: Mapped[str] = mapped_column(String(20), default="draft", server_default="draft")
     template_key: Mapped[str | None] = mapped_column(String(60))
+    # The latest simulated build: {"started_at", "message_id", "total_ms", "steps": [...]}. See build_simulator.
+    build_state: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )

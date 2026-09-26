@@ -2,6 +2,7 @@ import { ArrowLeft, Rocket } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMe } from "../../api/auth";
 import type { Project } from "../../api/projects";
+import { previewUrl } from "../../lib/previewUrl";
 import AccountMenu from "../../components/AccountMenu";
 import Button from "../../components/Button";
 import StatusBadge from "../../components/StatusBadge";
@@ -28,7 +29,14 @@ export default function WorkspaceHeader({ project }: { project: Project }) {
         <StatusBadge status={project.status} />
       </div>
       <ViewModeToggle project={project} />
-      <Tooltip label="Deploy becomes available once your app has been built." align="end">
+      <Tooltip
+        label={
+          project.status === "ready"
+            ? `Your preview is live at ${previewUrl(project.name)}. Production deploys are turned off for this workspace.`
+            : "Deploy becomes available once your app has been built."
+        }
+        align="end"
+      >
         <Button disabled tabIndex={-1} className="px-3 py-1.5">
           <Rocket className="h-4 w-4" aria-hidden />
           Deploy
