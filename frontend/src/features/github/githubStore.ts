@@ -31,6 +31,12 @@ export function useGitHub(projectId: string) {
   return { account, repo, setAccount, setRepo };
 }
 
+/** The connected GitHub account on its own, for places outside a project (like importing). */
+export function useGitHubAccount() {
+  const [account] = useLocalState<GitHubAccount>(ACCOUNT_KEY);
+  return account;
+}
+
 /** A GitHub-style username from the user's name, e.g. "Ada Lovelace" -> "ada-lovelace". */
 export function usernameFrom(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "architect-user";
