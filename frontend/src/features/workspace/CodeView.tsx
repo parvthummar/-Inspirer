@@ -1,16 +1,18 @@
 import { useMemo, useState } from "react";
 import { FolderCode } from "lucide-react";
-import type { PlanContent } from "../../api/plans";
+import type { Plan } from "../../api/plans";
 import type { Project } from "../../api/projects";
+import { useAgentWorkspace } from "../agents/agentStore";
 import CodeViewer from "./CodeViewer";
-import DevEmptyState from "./DevEmptyState";
+import PanelEmptyState from "../../components/PanelEmptyState";
 import FileTree from "./FileTree";
 import { projectFiles } from "./projectFiles";
 import type { BuildProgress } from "./useBuildProgress";
 
 type CodeViewProps = {
   project: Project;
-  plan: PlanContent | null;
+  /** The approved plan the app was built from. */
+  plan: Plan | null;
   progress: BuildProgress | null;
 };
 
@@ -18,15 +20,26 @@ const PREFERRED_FIRST_FILE = "frontend/src/App.tsx";
 
 export default function CodeView({ project, plan, progress }: CodeViewProps) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  // Agent edits and the framework choice from the Agents tab show up in the agent files.
+  const { workspace } = useAgentWorkspace(project.id, plan ? { id: plan.id, agents: plan.content.agents } : null);
+  const build = progress?.build;
 
-  const allFiles = useMemo(
-    () => (plan && progress ? projectFiles(project.name, plan, progress.build) : []),
-    [project.name, plan, progress?.build], // eslint-disable-line react-hooks/exhaustive-deps -- progress changes every tick; only the build matters
-  );
+  const allFiles = useMemo(() => {
+    if (!plan || !build) return [];
+    const overrides = workspace && {
+      framework: workspace.framework,
+      agents: workspace.agents.map((agent) => ({
+        name: agent.name,
+        role: agent.role,
+        tools: agent.tools.filter((tool) => tool.enabled).map((tool) => tool.name),
+      })),
+    };
+    return projectFiles(project.name, plan.content, build, overrides ?? undefined);
+  }, [project.name, plan, build, workspace]);
 
   if (!plan || !progress) {
     return (
-      <DevEmptyState
+      <PanelEmptyState
         icon={FolderCode}
         title="No files yet"
         body="Architect writes the code when it builds your app. Approve the plan in the chat to start the build."
@@ -47,7 +60,7 @@ export default function CodeView({ project, plan, progress }: CodeViewProps) {
 
   if (!selected) {
     return (
-      <DevEmptyState icon={FolderCode} title="Writing the first files" body="Files appear here as each build step finishes." />
+      <PanelEmptyState icon={FolderCode} title="Writing the first files" body="Files appear here as each build step finishes." />
     );
   }
 

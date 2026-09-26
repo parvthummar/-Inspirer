@@ -1,5 +1,5 @@
 import type { Build } from "../../api/build";
-import type { PlanContent } from "../../api/plans";
+import type { PlanAgent, PlanContent } from "../../api/plans";
 import {
   agentPy,
   architectJson,
@@ -9,6 +9,7 @@ import {
   readme,
   slug,
   testsPy,
+  type AgentFramework,
 } from "../../mocks/generatedFiles";
 import { sourceFilesFor } from "../../sample-apps/sources";
 
@@ -29,8 +30,16 @@ function rewriteImports(source: string): string {
     .replace(/from "\.\/(\w+)View"/g, 'from "./$1"');
 }
 
+/** Agent settings from the Agents tab, when the user has changed them; otherwise the plan's agents are used. */
+export type AgentOverrides = { agents: PlanAgent[]; framework: AgentFramework };
+
 /** The files Architect "generated" for this project: real sample-app source plus files built from the plan. */
-export function projectFiles(projectName: string, plan: PlanContent, build: Build): ProjectFile[] {
+export function projectFiles(
+  projectName: string,
+  plan: PlanContent,
+  build: Build,
+  overrides?: AgentOverrides,
+): ProjectFile[] {
   const pageSteps = build.steps.filter((step) => step.id.startsWith("page-")).map((step) => step.id);
   const files: ProjectFile[] = [];
 
@@ -54,11 +63,14 @@ export function projectFiles(projectName: string, plan: PlanContent, build: Buil
     { path: "backend/app/main.py", stepId: "database", load: text(mainPy(projectName, plan)) },
     { path: "backend/tests/test_app.py", stepId: "tests", load: text(testsPy(plan)) },
   );
-  for (const agent of plan.agents) {
+  // Agent files appear with the build step for the planned agent; agents added later count as part of setup.
+  const plannedSteps = new Set(plan.agents.map((agent) => `agent-${slug(agent.name)}`));
+  for (const agent of overrides?.agents ?? plan.agents) {
+    const stepId = `agent-${slug(agent.name)}`;
     files.push({
       path: `backend/agents/${slug(agent.name, "_")}.py`,
-      stepId: `agent-${slug(agent.name)}`,
-      load: text(agentPy(agent)),
+      stepId: plannedSteps.has(stepId) ? stepId : "setup",
+      load: text(agentPy(agent, overrides?.framework)),
     });
   }
   for (const integration of plan.integrations) {

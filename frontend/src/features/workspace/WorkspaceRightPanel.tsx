@@ -1,18 +1,21 @@
 import { useState } from "react";
-import { Code2, MonitorPlay, ScrollText } from "lucide-react";
+import { Bot, Code2, MonitorPlay, ScrollText } from "lucide-react";
 import { useMessages } from "../../api/messages";
+import type { Plan } from "../../api/plans";
 import type { Project } from "../../api/projects";
+import AgentsView from "../agents/AgentsView";
 import CodeView from "./CodeView";
 import LogsView from "./LogsView";
 import PreviewPanel from "./PreviewPanel";
 import type { BuildProgress } from "./useBuildProgress";
 
-type Tab = "preview" | "code" | "logs";
+type Tab = "preview" | "agents" | "code" | "logs";
 
-const tabs: { id: Tab; label: string; icon: typeof Code2 }[] = [
-  { id: "preview", label: "Preview", icon: MonitorPlay },
-  { id: "code", label: "Code", icon: Code2 },
-  { id: "logs", label: "Logs", icon: ScrollText },
+const allTabs: { id: Tab; label: string; icon: typeof Code2; developerOnly: boolean }[] = [
+  { id: "preview", label: "Preview", icon: MonitorPlay, developerOnly: false },
+  { id: "agents", label: "Agents", icon: Bot, developerOnly: false },
+  { id: "code", label: "Code", icon: Code2, developerOnly: true },
+  { id: "logs", label: "Logs", icon: ScrollText, developerOnly: true },
 ];
 
 type WorkspaceRightPanelProps = {
@@ -20,20 +23,22 @@ type WorkspaceRightPanelProps = {
   progress: BuildProgress | null;
 };
 
-/** Simple view: just the preview. Developer view: Preview, Code and Logs tabs over the same project. */
+/** Preview and Agents in both views; Developer view adds Code and Logs. All tabs show the same project. */
 export default function WorkspaceRightPanel({ project, progress }: WorkspaceRightPanelProps) {
-  const [tab, setTab] = useState<Tab>("preview");
+  const [chosenTab, setTab] = useState<Tab>("preview");
   const messages = useMessages(project.id);
-  const approvedPlan =
-    [...(messages.data ?? [])].reverse().find((message) => message.plan?.status === "approved")?.plan?.content ?? null;
+  const developer = project.view_mode === "developer";
+  const tabs = allTabs.filter((tab) => developer || !tab.developerOnly);
+  // Switching back to Simple view while on a developer tab falls back to the preview.
+  const tab = tabs.some((t) => t.id === chosenTab) ? chosenTab : "preview";
 
-  if (project.view_mode === "simple") {
-    return <PreviewPanel project={project} progress={progress} />;
-  }
+  const plans = (messages.data ?? []).flatMap((message) => (message.plan ? [message.plan] : []));
+  const currentPlan: Plan | null = [...plans].reverse().find((plan) => plan.status !== "revised") ?? null;
+  const approvedPlan: Plan | null = [...plans].reverse().find((plan) => plan.status === "approved") ?? null;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div role="tablist" aria-label="Developer tools" className="flex h-10 shrink-0 items-end gap-1 border-b border-line bg-panel px-3">
+      <div role="tablist" aria-label="Workspace views" className="flex h-10 shrink-0 items-end gap-1 border-b border-line bg-panel px-3">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -55,10 +60,15 @@ export default function WorkspaceRightPanel({ project, progress }: WorkspaceRigh
           </button>
         ))}
       </div>
-      {/* The preview stays mounted so the app keeps its state while you look at code or logs. */}
+      {/* The preview stays mounted so the app keeps its state while other tabs are open. */}
       <div id="panel-preview" role="tabpanel" aria-labelledby="tab-preview" hidden={tab !== "preview"} className="min-h-0 flex-1">
         <PreviewPanel project={project} progress={progress} />
       </div>
+      {tab === "agents" && (
+        <div id="panel-agents" role="tabpanel" aria-labelledby="tab-agents" className="min-h-0 flex-1">
+          <AgentsView project={project} plan={currentPlan} />
+        </div>
+      )}
       {tab === "code" && (
         <div id="panel-code" role="tabpanel" aria-labelledby="tab-code" className="min-h-0 flex-1">
           <CodeView project={project} plan={approvedPlan} progress={progress} />

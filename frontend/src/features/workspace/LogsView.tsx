@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollText, Search } from "lucide-react";
-import type { PlanContent } from "../../api/plans";
+import type { Plan } from "../../api/plans";
 import type { Project } from "../../api/projects";
-import DevEmptyState from "./DevEmptyState";
+import PanelEmptyState from "../../components/PanelEmptyState";
 import { buildLogLines, runtimeEvents, type LogLevel, type LogLine, type LogSource } from "./logLines";
 import type { BuildProgress } from "./useBuildProgress";
 
 type LogsViewProps = {
   project: Project;
-  plan: PlanContent | null;
+  plan: Plan | null;
   progress: BuildProgress | null;
 };
 
@@ -38,7 +38,7 @@ export default function LogsView({ project, plan, progress }: LogsViewProps) {
   // The running preview keeps producing logs while this tab is open.
   useEffect(() => {
     if (!ready || !plan) return;
-    const events = runtimeEvents(plan);
+    const events = runtimeEvents(plan.content);
     let index = 0;
     const timer = window.setInterval(() => {
       const event = events[index % events.length];
@@ -63,7 +63,7 @@ export default function LogsView({ project, plan, progress }: LogsViewProps) {
 
   if (!progress) {
     return (
-      <DevEmptyState
+      <PanelEmptyState
         icon={ScrollText}
         title="No logs yet"
         body="Build and runtime logs appear here once Architect starts building your app. Approve the plan in the chat to start."

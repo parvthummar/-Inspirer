@@ -1,12 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 
-type DevEmptyStateProps = {
+type PanelEmptyStateProps = {
   icon: LucideIcon;
   title: string;
   body: string;
 };
 
-export default function DevEmptyState({ icon: Icon, title, body }: DevEmptyStateProps) {
+export default function PanelEmptyState({ icon: Icon, title, body }: PanelEmptyStateProps) {
   return (
     <div className="flex h-full flex-col items-center justify-center bg-panel p-6 text-center">
       <Icon className="h-6 w-6 text-muted" aria-hidden />

@@ -89,19 +89,102 @@ def health() -> dict[str, str]:
 `;
 }
 
-export function agentPy(agent: PlanAgent): string {
+export type AgentFramework = "lyzr" | "langgraph" | "crewai" | "openai_agents";
+
+/** One agent's definition, written for the chosen framework. */
+export function agentPy(agent: PlanAgent, framework: AgentFramework = "lyzr"): string {
+  const id = slug(agent.name, "_");
   const tools = agent.tools.map((tool) => slug(tool, "_"));
-  const className = componentName(agent.name) || "Agent";
-  return `"""${agent.name}: ${agent.role}"""
-
-from architect.agents import Agent, tool
-
-SYSTEM_PROMPT = """
+  const header = `"""${agent.name}: ${agent.role}"""
+`;
+  const prompt = `INSTRUCTIONS = """
 You are the ${agent.name}.
 ${agent.role}
 If you are not sure, hand the task to a person instead of guessing.
 """
+`;
 
+  if (framework === "langgraph") {
+    return `${header}
+from langchain_core.tools import tool
+from langgraph.prebuilt import create_react_agent
+
+${prompt}
+${tools
+  .map(
+    (name, index) => `
+@tool
+def ${name}(query: str) -> str:
+    """${agent.tools[index]}"""
+    return services.call("${name}", query)
+`,
+  )
+  .join("")}
+
+${id} = create_react_agent(
+    model="openai:gpt-4o-mini",
+    tools=[${tools.join(", ")}],
+    prompt=INSTRUCTIONS,
+)
+`;
+  }
+
+  if (framework === "crewai") {
+    return `${header}
+from crewai import Agent
+from crewai.tools import tool
+
+${prompt}
+${tools
+  .map(
+    (name, index) => `
+@tool("${agent.tools[index]}")
+def ${name}(query: str) -> str:
+    """${agent.tools[index]}"""
+    return services.call("${name}", query)
+`,
+  )
+  .join("")}
+
+${id} = Agent(
+    role="${agent.name}",
+    goal="${agent.role.replace(/"/g, "'")}",
+    backstory=INSTRUCTIONS,
+    tools=[${tools.join(", ")}],
+    allow_delegation=True,
+)
+`;
+  }
+
+  if (framework === "openai_agents") {
+    return `${header}
+from agents import Agent, function_tool
+
+${prompt}
+${tools
+  .map(
+    (name, index) => `
+@function_tool
+def ${name}(query: str) -> str:
+    """${agent.tools[index]}"""
+    return services.call("${name}", query)
+`,
+  )
+  .join("")}
+
+${id} = Agent(
+    name="${agent.name}",
+    instructions=INSTRUCTIONS,
+    model="gpt-4o-mini",
+    tools=[${tools.join(", ")}],
+)
+`;
+  }
+
+  return `${header}
+from lyzr_agents import Agent, tool
+
+${prompt}
 ${tools
   .map(
     (name, index) => `
@@ -112,11 +195,11 @@ async def ${name}(context: dict) -> dict:
   )
   .join("")}
 
-${className} = Agent(
-    name="${slug(agent.name, "_")}",
-    system_prompt=SYSTEM_PROMPT,
+${id} = Agent(
+    name="${id}",
+    instructions=INSTRUCTIONS,
     tools=[${tools.join(", ")}],
-    model="default",
+    memory="conversation",
     handoff_to_human=True,
 )
 `;
