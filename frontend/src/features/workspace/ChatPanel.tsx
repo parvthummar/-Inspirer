@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { messageKeys, useMessages, useSendMessage } from "../../api/messages";
+import { messageKeys, useMessages, useSendMessage, type Message } from "../../api/messages";
 import type { Project } from "../../api/projects";
 import Alert from "../../components/Alert";
 import Button from "../../components/Button";
@@ -9,6 +9,7 @@ import ChatMessage from "./ChatMessage";
 import MessagesSkeleton from "./MessagesSkeleton";
 import MissingPlanNotice from "./MissingPlanNotice";
 import PlanningIndicator from "./PlanningIndicator";
+import RestoreCheckpointDialog from "./RestoreCheckpointDialog";
 import ThinkingIndicator from "./ThinkingIndicator";
 import type { BuildProgress } from "./useBuildProgress";
 
@@ -25,6 +26,10 @@ export default function ChatPanel({ project, progress }: ChatPanelProps) {
   const count = messages.data?.length ?? 0;
   const planning = project.status === "planning";
   const hasPlan = messages.data?.some((message) => message.plan) ?? false;
+  const [restoreTarget, setRestoreTarget] = useState<{ message: Message; later: number } | null>(null);
+  const lastIndex = count - 1;
+  // Restoring while Architect is mid-reply or mid-plan would lose that work, so wait until it's done.
+  const canRestore = !planning && !sendMessage.isPending;
 
   // When background work (a plan or a build) finishes, load the messages it added.
   const working = planning || project.status === "building";
@@ -58,11 +63,16 @@ export default function ChatPanel({ project, progress }: ChatPanelProps) {
 
         {messages.data && (
           <ol className="space-y-6 px-4 py-5" aria-live="polite">
-            {messages.data.map((message) => (
+            {messages.data.map((message, index) => (
               <ChatMessage
                 key={message.id}
                 message={message}
                 project={project}
+                onRestore={
+                  canRestore && message.has_checkpoint && !message.pending && index < lastIndex
+                    ? () => setRestoreTarget({ message, later: lastIndex - index })
+                    : undefined
+                }
                 liveSteps={
                   project.status === "building" && progress && message.id === progress.build.message_id
                     ? progress.build.steps.map((step, index) => ({
@@ -85,6 +95,15 @@ export default function ChatPanel({ project, progress }: ChatPanelProps) {
           </div>
         )}
       </div>
+
+      {restoreTarget && (
+        <RestoreCheckpointDialog
+          projectId={project.id}
+          message={restoreTarget.message}
+          laterMessages={restoreTarget.later}
+          onClose={() => setRestoreTarget(null)}
+        />
+      )}
 
       <ChatComposer
         sending={sendMessage.isPending}

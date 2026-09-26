@@ -8,6 +8,7 @@ import { sampleAppFor } from "../../sample-apps";
 import BrowserFrame, { type Device } from "./BrowserFrame";
 import BuildReveal from "./BuildReveal";
 import PreviewPlaceholder from "./PreviewPlaceholder";
+import EditLayer from "../visual-edit/EditLayer";
 import ReadyBanner from "./ReadyBanner";
 import type { BuildProgress } from "./useBuildProgress";
 
@@ -22,6 +23,7 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
   const [device, setDevice] = useState<Device>("desktop");
   const [reloadKey, setReloadKey] = useState(0);
   const [reloading, setReloading] = useState(false);
+  const [editing, setEditing] = useState(false);
   const startBuild = useStartBuild(project.id);
 
   // Celebrate only when a build finishes while the user is watching, not on every visit.
@@ -101,7 +103,14 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
       ) : (
         <div className="relative h-full">
           {justFinished && <ReadyBanner />}
-          <App key={reloadKey} appName={project.name} compact={compact} />
+          {editing && (
+            <p className="pointer-events-none absolute inset-x-0 bottom-3 z-10 mx-auto w-fit rounded-full bg-ink px-3 py-1 text-xs text-panel shadow-lg">
+              Click anything in your app to change it. Press Done editing when you're finished.
+            </p>
+          )}
+          <EditLayer project={project} editing={editing}>
+            <App key={reloadKey} appName={project.name} compact={compact} />
+          </EditLayer>
         </div>
       );
       break;
@@ -116,6 +125,8 @@ export default function PreviewPanel({ project, progress }: PreviewPanelProps) {
         live={project.status === "ready"}
         onReload={reload}
         onOpenInNewTab={() => window.open(`/project/${project.id}/preview`, "_blank", "noopener")}
+        editing={editing && project.status === "ready"}
+        onToggleEditing={() => setEditing((value) => !value)}
       >
         {content}
       </BrowserFrame>

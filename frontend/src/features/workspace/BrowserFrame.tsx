@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ExternalLink, Lock, Monitor, RotateCw, Smartphone, Tablet } from "lucide-react";
+import { ExternalLink, Lock, Monitor, MousePointerClick, RotateCw, Smartphone, Tablet } from "lucide-react";
 
 export type Device = "desktop" | "tablet" | "mobile";
 
@@ -17,10 +17,23 @@ type BrowserFrameProps = {
   live: boolean;
   onReload?: () => void;
   onOpenInNewTab?: () => void;
+  /** Click-to-edit mode, available once the app is built. */
+  editing?: boolean;
+  onToggleEditing?: () => void;
   children: ReactNode;
 };
 
-export default function BrowserFrame({ url, device, onDeviceChange, live, onReload, onOpenInNewTab, children }: BrowserFrameProps) {
+export default function BrowserFrame({
+  url,
+  device,
+  onDeviceChange,
+  live,
+  onReload,
+  onOpenInNewTab,
+  editing = false,
+  onToggleEditing,
+  children,
+}: BrowserFrameProps) {
   const width = devices.find((d) => d.value === device)?.width ?? "100%";
 
   return (
@@ -56,6 +69,21 @@ export default function BrowserFrame({ url, device, onDeviceChange, live, onRelo
             </button>
           ))}
         </div>
+        {onToggleEditing && (
+          <button
+            type="button"
+            onClick={onToggleEditing}
+            disabled={!live}
+            aria-pressed={editing}
+            title={live ? (editing ? "Stop editing" : "Click an element to change it") : "Available once your app is built"}
+            className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium disabled:opacity-40 ${
+              editing ? "bg-accent text-panel" : "text-muted hover:bg-surface hover:text-ink"
+            }`}
+          >
+            <MousePointerClick className="h-3.5 w-3.5" aria-hidden />
+            {editing ? "Done editing" : "Click to edit"}
+          </button>
+        )}
         <button
           type="button"
           onClick={onOpenInNewTab}

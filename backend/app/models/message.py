@@ -28,6 +28,12 @@ class Message(UUIDPrimaryKey, CreatedAt, Base):
     steps: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list, server_default="[]")
     # Set when this assistant message presents a plan; the chat shows it as a plan card.
     plan_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("plans.id", ondelete="SET NULL"))
+    # Project state right after this message, so the project can be restored to this point.
+    snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
     project: Mapped["Project"] = relationship(back_populates="messages")
     plan: Mapped["Plan | None"] = relationship(lazy="joined")
+
+    @property
+    def has_checkpoint(self) -> bool:
+        return self.snapshot is not None

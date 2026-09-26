@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Message, Project, User
 from app.schemas.project import ProjectUpdate
-from app.services import build_simulator
+from app.services import build_simulator, checkpoint_service
 
 MAX_NAME_LENGTH = 60
 _FILLER = re.compile(
@@ -63,9 +63,11 @@ def create_project(db: Session, user: User, prompt: str) -> Project:
         initial_prompt=prompt,
         status="planning",  # the plan is written in the background right after creation
     )
-    # The prompt is the first message of the project's chat.
-    project.messages.append(Message(role="user", content=prompt))
+    # The prompt is the first message of the project's chat, and the earliest checkpoint.
+    first_message = Message(role="user", content=prompt)
+    project.messages.append(first_message)
     db.add(project)
+    checkpoint_service.record(db, project, first_message)
     db.commit()
     db.refresh(project)
     return project

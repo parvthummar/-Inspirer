@@ -140,6 +140,10 @@ Build (dummy):
 - `GET /api/projects/{id}/build` returns the scripted steps with their timings, and the final status
 - Approving the plan starts the build automatically; `POST /build` is used to rebuild (e.g. "Fix it for me").
 
+Checkpoints:
+- `POST /api/projects/{id}/checkpoints/restore` body: message_id. Removes every message and plan version after that message and restores the project snapshot stored on it (messages have `has_checkpoint`).
+- `POST /api/projects/{id}/edits` body: element, instruction, change, file. Saves a click-to-edit change as a chat exchange (no AI call); requires status "ready".
+
 ## OpenAI usage
 
 - All OpenAI calls live in `backend/app/services/openai_service.py`. Routers never call OpenAI directly.
@@ -276,3 +280,5 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
 - [x] Phase 2: GitHub integration (dummy). Header button with sync dot opens a dialog: simulated account authorisation, create a repository (owner, name, visibility) or link an existing one, setup progress, then repository overview with sync status (up to date / changes to pull / changes to push), Sync now, auto-push toggle, commit history derived from the build steps, and disconnect. State kept in the browser (account shared, repository per project).
 - [x] Phase 2: deploy panel (dummy). Header Deploy button (enabled once built, green dot when live) opens a drawer: Overview (preview vs production, deploy with confirm, live steps and logs, blocks on missing keys), Environment/Keys (managed and required variables from the plan's integrations, masked values), Domain (custom domain, DNS records, check DNS, HTTPS), History (versions, logs, roll back or restore). Preview host is now `<slug>-preview.architect.app`, production `<slug>.architect.app`. State kept in the browser via `lib/localStore.ts` (also used by the agent and GitHub stores).
 - [x] Phase 2: import project. Dashboard modal: choose source (GitHub link or your repos when GitHub is connected, zip, Lovable/Bolt/Replit/v0 export), simulated analysis, then a "Here's what I understood" review (plain summary, pages, agents, services, things to know, collapsible stack/files/languages, editable name). Importing creates a real project whose first message is built from the summary, so the plan continues the app.
+- [x] Phase 2: checkpoints (real). Messages store a snapshot of project state (`messages.snapshot`, migration `9ef303305319`) whenever Architect posts one; "Restore to here" on hover in the chat, with confirmation, removes later messages and plan versions and restores status, name, template, build and plan statuses. Agent settings, GitHub and deploy state (browser-only) are not rolled back.
+- [x] Phase 2: click-to-edit in the preview. "Click to edit" toggle in the browser frame; hover outlines elements with a name, click opens a popover. Text, colour, size, bold, rounded and hide are applied instantly (DOM overrides kept per project in the browser, tied to the chat message so checkpoint restores undo them) and confirmed in chat via `POST /edits`; other requests go to Architect as a normal chat message with the element as context.

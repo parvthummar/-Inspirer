@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.models import Message, Plan, Project
 from app.schemas.plan import PlanContent
-from app.services import build_simulator, openai_service
+from app.services import build_simulator, checkpoint_service, openai_service
 from app.services.project_service import draft_name_from_prompt
 
 logger = logging.getLogger(__name__)
@@ -107,15 +107,15 @@ def run_planning(project_id: uuid.UUID, feedback: str | None = None) -> None:
                 project.name = draft.project_name
             project.description = draft.summary
             project.status = "draft"
-            db.add(
-                Message(
-                    project_id=project.id,
-                    role="assistant",
-                    content=_intro_message(project.name, revising, used_ai),
-                    plan_id=plan.id,
-                    created_at=func.clock_timestamp(),
-                )
+            plan_message = Message(
+                project_id=project.id,
+                role="assistant",
+                content=_intro_message(project.name, revising, used_ai),
+                plan_id=plan.id,
+                created_at=func.clock_timestamp(),
             )
+            db.add(plan_message)
+            checkpoint_service.record(db, project, plan_message)
             db.commit()
         except Exception:
             logger.exception("Saving the plan failed for project %s", project_id)

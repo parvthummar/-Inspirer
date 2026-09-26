@@ -1,3 +1,4 @@
+import { RotateCcw } from "lucide-react";
 import type { Message, MessageStep } from "../../api/messages";
 import type { Project } from "../../api/projects";
 import ArchitectAvatar from "./ArchitectAvatar";
@@ -11,18 +12,30 @@ type ChatMessageProps = {
   project: Project;
   /** Live build steps for the message that tracks the running build. */
   liveSteps?: MessageStep[];
+  /** Set when the project can be restored to just after this message. */
+  onRestore?: () => void;
 };
 
-export default function ChatMessage({ message, project, liveSteps }: ChatMessageProps) {
+export default function ChatMessage({ message, project, liveSteps, onRestore }: ChatMessageProps) {
   const steps = liveSteps ?? message.steps;
-  const time = (
-    <time
-      dateTime={message.created_at}
-      title={new Date(message.created_at).toLocaleString()}
-      className="text-[11px] text-muted opacity-0 transition-opacity group-hover:opacity-100"
-    >
-      {message.pending ? "Sending" : timeFormat.format(new Date(message.created_at))}
-    </time>
+  // Revealed on hover, or when keyboard focus lands on the restore button.
+  const hoverOnly = "opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100";
+  const meta = (
+    <span className={`flex items-center gap-2 ${hoverOnly}`}>
+      <time dateTime={message.created_at} title={new Date(message.created_at).toLocaleString()} className="text-[11px] text-muted">
+        {message.pending ? "Sending" : timeFormat.format(new Date(message.created_at))}
+      </time>
+      {onRestore && (
+        <button
+          type="button"
+          onClick={onRestore}
+          className="flex items-center gap-1 rounded px-1 text-[11px] text-muted hover:bg-surface hover:text-accent"
+        >
+          <RotateCcw className="h-3 w-3" aria-hidden />
+          Restore to here
+        </button>
+      )}
+    </span>
   );
 
   if (message.role === "user") {
@@ -35,7 +48,7 @@ export default function ChatMessage({ message, project, liveSteps }: ChatMessage
         >
           {message.content}
         </div>
-        {time}
+        {meta}
       </li>
     );
   }
@@ -46,7 +59,7 @@ export default function ChatMessage({ message, project, liveSteps }: ChatMessage
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex items-baseline gap-2">
           <span className="text-xs font-semibold">Architect</span>
-          {time}
+          {meta}
         </div>
         <div className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{message.content}</div>
         {steps.length > 0 && <MessageSteps steps={steps} mono={Boolean(liveSteps) && project.view_mode === "developer"} />}

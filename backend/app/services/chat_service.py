@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Message, Project
-from app.services import openai_service, plan_service
+from app.services import checkpoint_service, openai_service, plan_service
 
 
 @dataclass
@@ -39,6 +40,37 @@ def _context(db: Session, project: Project) -> openai_service.ChatContext:
     )
 
 
+def save_visual_edit(db: Session, project: Project, element: str, instruction: str, change: str, file: str) -> list[Message]:
+    """Record a click-to-edit change in the chat: the request, and Architect's confirmation."""
+    if project.status != "ready":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="The app needs to finish building before you can edit it in the preview.",
+        )
+    request = Message(
+        project_id=project.id,
+        role="user",
+        content=f"{instruction.strip()} (on {element.strip()} in the preview)",
+        created_at=func.clock_timestamp(),
+    )
+    db.add(request)
+    db.flush()
+    reply = Message(
+        project_id=project.id,
+        role="assistant",
+        content=f"Done. {change.strip()}",
+        steps=[{"label": f"Updated {file.strip()}", "status": "done"}, {"label": "Refreshed the preview", "status": "done"}],
+        created_at=func.clock_timestamp(),
+    )
+    db.add(reply)
+    project.updated_at = func.now()
+    checkpoint_service.record(db, project, reply)
+    db.commit()
+    db.refresh(request)
+    db.refresh(reply)
+    return [request, reply]
+
+
 def send_message(db: Session, project: Project, content: str) -> SendResult:
     """Save the user's message, get Architect's reply, and save it. Messages are returned oldest first."""
     content = content.strip()
@@ -58,6 +90,7 @@ def send_message(db: Session, project: Project, content: str) -> SendResult:
     )
     db.add(reply)
     project.updated_at = func.now()  # new chat activity moves the project to the top of the dashboard
+    checkpoint_service.record(db, project, reply)
     db.commit()
     db.refresh(user_message)
     db.refresh(reply)

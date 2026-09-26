@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.deps import get_db
-from app.routers import auth, build, chat, plans, projects
+from app.routers import auth, build, chat, checkpoints, plans, projects
 
 settings = get_settings()
 
@@ -26,6 +26,7 @@ app.include_router(projects.router)
 app.include_router(chat.router)
 app.include_router(plans.router)
 app.include_router(build.router)
+app.include_router(checkpoints.router)
 
 
 def _describe_validation_error(error: dict) -> str:

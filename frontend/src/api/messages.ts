@@ -12,6 +12,8 @@ export type Message = {
   steps: MessageStep[];
   /** Set when this message presents a plan, shown as a plan card. */
   plan: Plan | null;
+  /** Whether the project can be restored to just after this message. */
+  has_checkpoint: boolean;
   created_at: string;
   /** Set on the optimistic copy of a message while it is being sent. */
   pending?: boolean;
@@ -48,6 +50,7 @@ export function useSendMessage(projectId: string) {
         content,
         steps: [],
         plan: null,
+        has_checkpoint: false,
         created_at: new Date().toISOString(),
         pending: true,
       };
@@ -65,6 +68,21 @@ export function useSendMessage(projectId: string) {
       void queryClient.invalidateQueries({ queryKey: projectKeys.all, exact: true });
       // The reply may have started a plan revision, which changes the project's status.
       void queryClient.invalidateQueries({ queryKey: projectKeys.detail(projectId), exact: true });
+    },
+  });
+}
+
+export type VisualEditInput = { element: string; instruction: string; change: string; file: string };
+
+/** Save a click-to-edit change as a chat exchange (no AI call). Returns the request and Architect's reply. */
+export function useSaveVisualEdit(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: VisualEditInput) =>
+      apiFetch<Message[]>(`/api/projects/${projectId}/edits`, { method: "POST", body: JSON.stringify(input) }),
+    onSuccess: (saved) => {
+      queryClient.setQueryData<Message[]>(messageKeys.list(projectId), (messages = []) => [...messages, ...saved]);
+      void queryClient.invalidateQueries({ queryKey: projectKeys.all, exact: true });
     },
   });
 }

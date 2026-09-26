@@ -5,6 +5,7 @@ import { useProject } from "../../api/projects";
 import FullPageLoader from "../../components/FullPageLoader";
 import { previewUrl } from "../../lib/previewUrl";
 import { sampleAppFor } from "../../sample-apps";
+import EditLayer from "../visual-edit/EditLayer";
 
 const COMPACT_BELOW_PX = 640;
 
@@ -55,7 +56,10 @@ export default function PreviewPage() {
         <span className="ml-auto hidden text-panel/60 sm:inline">Preview built by Architect</span>
       </div>
       <div className="min-h-0 flex-1">
-        <App appName={project.data.name} compact={compact} />
+        {/* Not editable here, but shows the changes made with click-to-edit. */}
+        <EditLayer project={project.data} editing={false}>
+          <App appName={project.data.name} compact={compact} />
+        </EditLayer>
       </div>
     </div>
   );

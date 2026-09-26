@@ -15,6 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Message, Plan, Project
+from app.services import checkpoint_service
 
 BUILDABLE_STATUSES = ("draft", "ready", "error")
 
@@ -169,6 +170,7 @@ def start_build(db: Session, project: Project) -> None:
         "total_ms": sum(step["duration_ms"] for step in steps),
         "steps": steps,
     }
+    checkpoint_service.record(db, project, message)
 
 
 def elapsed_ms(db: Session, project: Project) -> int:
@@ -193,17 +195,20 @@ def finish_if_done(db: Session, project: Project) -> None:
     if build_message is not None:
         build_message.steps = [{"label": step["label"], "status": "done"} for step in state["steps"]]
         build_message.content = f"Built your app in {seconds} seconds."
-    db.add(
-        Message(
-            project_id=project.id,
-            role="assistant",
-            content=(
-                "Your app is ready. Try it out in the preview on the right. "
-                "If you'd like anything changed, just tell me here."
-            ),
-            created_at=func.clock_timestamp(),
-        )
+    ready_message = Message(
+        project_id=project.id,
+        role="assistant",
+        content=(
+            "Your app is ready. Try it out in the preview on the right. "
+            "If you'd like anything changed, just tell me here."
+        ),
+        created_at=func.clock_timestamp(),
     )
+    db.add(ready_message)
     project.status = "ready"
+    # Both the finished build message and the "ready" message restore to a built app.
+    if build_message is not None:
+        checkpoint_service.record(db, project, build_message)
+    checkpoint_service.record(db, project, ready_message)
     db.commit()
     db.refresh(project)
