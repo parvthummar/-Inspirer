@@ -9,6 +9,7 @@ from app.db import Base
 from app.models.base import CreatedAt, UUIDPrimaryKey
 
 if TYPE_CHECKING:
+    from app.models.plan import Plan
     from app.models.project import Project
 
 MESSAGE_ROLES = ("user", "assistant")
@@ -25,5 +26,8 @@ class Message(UUIDPrimaryKey, CreatedAt, Base):
     content: Mapped[str] = mapped_column(Text)
     # Action steps shown under an assistant message, e.g. [{"label": "Created login page"}].
     steps: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list, server_default="[]")
+    # Set when this assistant message presents a plan; the chat shows it as a plan card.
+    plan_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("plans.id", ondelete="SET NULL"))
 
     project: Mapped["Project"] = relationship(back_populates="messages")
+    plan: Mapped["Plan | None"] = relationship(lazy="joined")

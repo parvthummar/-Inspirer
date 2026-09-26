@@ -56,6 +56,7 @@ def create_project(db: Session, user: User, prompt: str) -> Project:
         user_id=user.id,
         name=draft_name_from_prompt(prompt),
         initial_prompt=prompt,
+        status="planning",  # the plan is written in the background right after creation
     )
     # The prompt is the first message of the project's chat.
     project.messages.append(Message(role="user", content=prompt))

@@ -123,7 +123,7 @@ The JWT (JSON Web Token) is stored in an httpOnly cookie, so frontend JavaScript
 
 Projects:
 - `GET /api/projects`
-- `POST /api/projects` body: prompt. Creates the project, asks OpenAI for a name and a plan, returns both.
+- `POST /api/projects` body: prompt. Creates the project with status "planning" and returns it straight away; OpenAI writes the name and plan in the background (the workspace polls and shows progress).
 - `GET /api/projects/{id}`
 - `PATCH /api/projects/{id}` body: any of name, view_mode
 - `DELETE /api/projects/{id}`
@@ -131,6 +131,8 @@ Projects:
 Chat and plan:
 - `GET /api/projects/{id}/messages`
 - `POST /api/projects/{id}/messages` body: content. Saves the user message, gets an assistant reply from OpenAI, saves and returns it.
+- `POST /api/projects/{id}/plan` body: optional feedback. Writes a new plan (or revises the current one with the feedback) in the background; the project is "planning" until the plan message appears.
+- `PATCH /api/projects/{id}/plan` body: plan content. Saves the user's edits to the proposed plan.
 - `POST /api/projects/{id}/plan/approve`
 
 Build (dummy):
@@ -264,4 +266,6 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
 - [x] Phase 1, step 2: database models (users, projects, messages, plans) and first Alembic migration `ae4e01685453`
 - [x] Phase 1, step 3: email/password auth (JWT in httpOnly cookie `architect_session`, 7 days), login/signup pages, protected routes, account menu with log out
 - [x] Phase 1, step 4: dashboard (prompt box, project grid with delete, starter templates, dummy import modal for GitHub/zip/other platform). Project name is drafted from the prompt until OpenAI names it in step 6.
-- [ ] Phase 1, step 5: workspace layout with chat panel and preview panel
+- [x] Phase 1, step 5: workspace layout (header with rename, Simple/Developer toggle saved per project, disabled Deploy with tooltip; resizable chat panel with real messages; preview panel in a browser frame with device sizes and per-status placeholders). Assistant replies are a fixed placeholder until step 7.
+- [x] Phase 1, step 6: OpenAI plan generation in the background (structured output, one retry, fallback plan), plan card in chat with Approve plan / Edit plan / Ask for changes, earlier versions collapsed, `messages.plan_id` migration. Approving does not start a build yet (step 8).
+- [ ] Phase 1, step 7: chat replies from OpenAI, saved to the database

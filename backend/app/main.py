@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.deps import get_db
-from app.routers import auth, projects
+from app.routers import auth, chat, plans, projects
 
 settings = get_settings()
 
@@ -23,6 +23,8 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(projects.router)
+app.include_router(chat.router)
+app.include_router(plans.router)
 
 
 def _describe_validation_error(error: dict) -> str:
@@ -31,6 +33,10 @@ def _describe_validation_error(error: dict) -> str:
         return "Enter a valid email address."
     if field == "password" and error.get("type") == "string_too_short":
         return "Use at least 8 characters for your password."
+    if field == "content":
+        return "Write a message before sending."
+    if field == "feedback":
+        return "Tell Architect what to change in the plan."
     if field == "prompt":
         return "Describe your app in a few more words so Architect can plan it."
     return f"Check the {field} field: {error.get('msg', 'invalid value')}."

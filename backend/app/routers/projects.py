@@ -1,12 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from sqlalchemy.orm import Session
 
 from app.deps import get_current_user, get_db
 from app.models import Project, User
 from app.schemas.project import ProjectCreate, ProjectOut, ProjectUpdate
-from app.services import project_service
+from app.services import plan_service, project_service
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -18,9 +18,15 @@ def list_projects(user: User = Depends(get_current_user), db: Session = Depends(
 
 @router.post("", response_model=ProjectOut, status_code=status.HTTP_201_CREATED)
 def create_project(
-    body: ProjectCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    body: ProjectCreate,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ) -> Project:
-    return project_service.create_project(db, user, body.prompt)
+    """Create the project and start writing its plan. The plan appears in the chat when it is ready."""
+    project = project_service.create_project(db, user, body.prompt)
+    background_tasks.add_task(plan_service.run_planning, project.id)
+    return project
 
 
 @router.get("/{project_id}", response_model=ProjectOut)

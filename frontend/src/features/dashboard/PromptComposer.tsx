@@ -73,10 +73,10 @@ const PromptComposer = forwardRef<PromptComposerHandle>(function PromptComposer(
           <p className="hidden text-xs text-muted sm:block">
             {prompt.length > MAX_LENGTH * 0.8
               ? `${MAX_LENGTH - prompt.length} characters left`
-              : `Press ${isMac ? "Cmd" : "Ctrl"} + Enter to create`}
+              : `Press ${isMac ? "Cmd" : "Ctrl"} + Enter to start`}
           </p>
           <Button type="submit" disabled={!canSubmit} loading={createProject.isPending} className="ml-auto">
-            {createProject.isPending ? "Creating project" : "Create project"}
+            {createProject.isPending ? "Starting your plan" : "Plan my app"}
             {!createProject.isPending && <ArrowRight className="h-4 w-4" aria-hidden />}
           </Button>
         </div>
