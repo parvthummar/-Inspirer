@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Gauge, LogOut } from "lucide-react";
+import { Gauge, LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLogout, type User } from "../api/auth";
 import UsageDialog from "./UsageDialog";
@@ -68,6 +68,18 @@ export default function AccountMenu({ user }: { user: User }) {
           >
             <Gauge className="h-4 w-4 text-muted" aria-hidden />
             Usage and credits
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              navigate("/settings");
+            }}
+            className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-ink hover:bg-surface"
+          >
+            <Settings className="h-4 w-4 text-muted" aria-hidden />
+            Settings
           </button>
           <button
             type="button"

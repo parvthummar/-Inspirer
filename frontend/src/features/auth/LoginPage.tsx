@@ -1,15 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useLogin } from "../../api/auth";
+import { useGoogleLogin, useLogin } from "../../api/auth";
 import Alert from "../../components/Alert";
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
 import AuthLayout from "./AuthLayout";
+import GoogleSignInButton from "./GoogleSignInButton";
+import OrDivider from "./OrDivider";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const login = useLogin();
+  const googleLogin = useGoogleLogin();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -33,6 +36,17 @@ export default function LoginPage() {
         </>
       }
     >
+      {googleLogin.isError && (
+        <div className="mb-4">
+          <Alert>{googleLogin.error.message}</Alert>
+        </div>
+      )}
+      <GoogleSignInButton
+        context="signin"
+        busy={googleLogin.isPending}
+        onCredential={(credential) => googleLogin.mutate(credential, { onSuccess: () => navigate(redirectTo, { replace: true }) })}
+      />
+      <OrDivider />
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         {login.isError && <Alert>{login.error.message}</Alert>}
         <TextField

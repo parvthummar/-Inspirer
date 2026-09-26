@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     # Set to true in production, where frontend and backend live on different domains
     # and the auth cookie must be sent cross-site (SameSite=None requires Secure).
     cookie_secure: bool = False
+    # OAuth client ID for "Continue with Google". Empty turns Google sign-in off.
+    google_client_id: str = ""
 
 
 @lru_cache

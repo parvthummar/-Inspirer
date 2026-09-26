@@ -116,8 +116,11 @@ All routes are under `/api`. Responses are JSON. Errors use FastAPI's `HTTPExcep
 Auth:
 - `POST /api/auth/signup` body: name, email, password
 - `POST /api/auth/login` body: email, password
+- `POST /api/auth/google` body: credential (Google ID token from the "Continue with Google" button). Verifies it against Google's keys, creates the account on first sign-in, or logs into an existing account with the same verified email.
 - `POST /api/auth/logout`
 - `GET /api/auth/me`
+- `PATCH /api/auth/me` body: name
+- `POST /api/auth/password` body: current_password, password
 
 The JWT (JSON Web Token) is stored in an httpOnly cookie, so frontend JavaScript never touches it. Tokens expire after 7 days.
 
@@ -165,11 +168,14 @@ JWT_SECRET=change-me
 OPENAI_API_KEY=
 OPENAI_MODEL=
 FRONTEND_ORIGIN=http://localhost:5173
+COOKIE_SECURE=false
+GOOGLE_CLIENT_ID=
 ```
 
 Frontend `.env`:
 ```
 VITE_API_URL=http://localhost:8000
+VITE_GOOGLE_CLIENT_ID=
 ```
 
 Keep `.env.example` files updated whenever a new variable is added. Never commit real `.env` files.
@@ -287,3 +293,6 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
 - [x] Phase 2: click-to-edit in the preview. "Click to edit" toggle in the browser frame; hover outlines elements with a name, click opens a popover. Text, colour, size, bold, rounded and hide are applied instantly (DOM overrides kept per project in the browser, tied to the chat message so checkpoint restores undo them) and confirmed in chat via `POST /edits`; other requests go to Architect as a normal chat message with the element as context.
 - [x] Phase 3: usage and credits meter. Real usage counted from the database (`usage_service.py`); credits left and a bar in the dashboard header (red from 80%), "Usage and credits" in the account menu; dialog with breakdown, per-project bars and plans (upgrade is a request, no payment).
 - [x] Phase 3: onboarding. Three-step welcome tour for users with no projects (ends in the prompt box), and a dismissible "Getting started" checklist on the dashboard ticked off from real project data. Flags kept per user in the browser.
+- [x] Phase 3: settings page at `/settings/:section`. Profile (name and password, real), connected accounts (GitHub shares the workspace connection; Slack and Google Drive simulated), API keys (create once-shown key, masked list, revoke; browser only), billing and usage (shared `UsageSummary`, invoices empty state). Linked from the account menu.
+- [x] Phase 3: agent monitoring (dummy). Monitor tab in both views once built: stat tiles, conversations-per-hour chart, filters (all / needs attention, agent, 24 h / 7 days), live run list, run detail with conversation, step trace (tool calls, timings, tokens in Developer view), and failures explained in plain words with "Fix it for me". Runs generated from the approved plan (`mocks/monitorData.ts`), repeatable per project.
+- [x] Phase 2: Google sign-in (real). Google Identity Services button on login and signup; backend verifies the ID token with PyJWT (`pyjwt[crypto]`) against Google's public keys. Only the OAuth client ID is needed (no secret). Google-only accounts have no password (`has_password` false) and get a clear message on password login. When deploying, add the production frontend URL to Authorized JavaScript origins in Google Cloud.

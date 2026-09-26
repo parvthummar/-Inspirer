@@ -6,6 +6,8 @@ export type User = {
   name: string;
   email: string;
   auth_provider: string;
+  /** False for accounts created with Google, which have no password. */
+  has_password: boolean;
   created_at: string;
 };
 
@@ -39,6 +41,16 @@ export function useLogin() {
   });
 }
 
+/** Sign in or sign up with the credential from Google's button. */
+export function useGoogleLogin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (credential: string) =>
+      apiFetch<User>("/api/auth/google", { method: "POST", body: JSON.stringify({ credential }) }),
+    onSuccess: (user) => queryClient.setQueryData(ME_KEY, user),
+  });
+}
+
 export function useSignup() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -57,5 +69,20 @@ export function useLogout() {
       queryClient.clear();
       queryClient.setQueryData(ME_KEY, null);
     },
+  });
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => apiFetch<User>("/api/auth/me", { method: "PATCH", body: JSON.stringify({ name }) }),
+    onSuccess: (user) => queryClient.setQueryData(ME_KEY, user),
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (input: { current_password: string; password: string }) =>
+      apiFetch<void>("/api/auth/password", { method: "POST", body: JSON.stringify(input) }),
   });
 }

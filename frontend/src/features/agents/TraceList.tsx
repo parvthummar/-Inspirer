@@ -1,4 +1,4 @@
-import { Check, LoaderCircle } from "lucide-react";
+import { Check, LoaderCircle, X } from "lucide-react";
 import type { TraceStep } from "./playgroundScript";
 
 type TraceListProps = {
@@ -18,8 +18,14 @@ export default function TraceList({ steps, running, developer }: TraceListProps)
         {steps.map((step, index) => (
           <li key={index} className="text-xs">
             <div className="flex items-center gap-1.5">
-              <Check className="h-3.5 w-3.5 shrink-0 text-success" strokeWidth={2.5} aria-hidden />
-              <span className={developer ? "font-mono text-[11px]" : ""}>{developer ? step.call : step.label}</span>
+              {step.failed ? (
+                <X className="h-3.5 w-3.5 shrink-0 text-danger" strokeWidth={2.5} aria-label="Failed" />
+              ) : (
+                <Check className="h-3.5 w-3.5 shrink-0 text-success" strokeWidth={2.5} aria-hidden />
+              )}
+              <span className={`${developer ? "font-mono text-[11px]" : ""} ${step.failed ? "text-danger" : ""}`}>
+                {developer ? step.call : step.label}
+              </span>
               {developer && <span className="ml-auto shrink-0 font-mono text-[10px] text-muted">{step.durationMs}ms</span>}
             </div>
             {developer && <p className="ml-5 font-mono text-[10px] text-muted">→ {step.result}</p>}

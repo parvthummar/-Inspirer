@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FileBarChart, LayoutDashboard, ListTodo, Search, Workflow } from "lucide-react";
-import MiniBarChart from "../shared/MiniBarChart";
+import MiniBarChart from "../../components/MiniBarChart";
 import PageHeader from "../shared/PageHeader";
 import SampleShell from "../shared/SampleShell";
 import StatCard from "../shared/StatCard";

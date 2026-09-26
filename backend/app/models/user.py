@@ -19,6 +19,10 @@ class User(UUIDPrimaryKey, CreatedAt, Base):
     password_hash: Mapped[str | None] = mapped_column(String(255))
     auth_provider: Mapped[str] = mapped_column(String(20), default="email", server_default="email")
 
+    @property
+    def has_password(self) -> bool:
+        return self.password_hash is not None
+
     projects: Mapped[list["Project"]] = relationship(
         back_populates="user", cascade="all, delete-orphan", passive_deletes=True
     )

@@ -9,6 +9,8 @@ export type TraceStep = {
   result: string;
   durationMs: number;
   tokens: number;
+  /** Shown with a cross instead of a tick. */
+  failed?: boolean;
 };
 
 export type SimulatedRun = {

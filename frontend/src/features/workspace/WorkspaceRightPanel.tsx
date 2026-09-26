@@ -1,19 +1,21 @@
 import { useState } from "react";
-import { Bot, Code2, MonitorPlay, ScrollText } from "lucide-react";
+import { Activity, Bot, Code2, MonitorPlay, ScrollText } from "lucide-react";
 import { useMessages } from "../../api/messages";
 import type { Plan } from "../../api/plans";
 import type { Project } from "../../api/projects";
 import AgentsView from "../agents/AgentsView";
+import MonitorView from "../monitor/MonitorView";
 import CodeView from "./CodeView";
 import LogsView from "./LogsView";
 import PreviewPanel from "./PreviewPanel";
 import type { BuildProgress } from "./useBuildProgress";
 
-type Tab = "preview" | "agents" | "code" | "logs";
+type Tab = "preview" | "agents" | "monitor" | "code" | "logs";
 
 const allTabs: { id: Tab; label: string; icon: typeof Code2; developerOnly: boolean }[] = [
   { id: "preview", label: "Preview", icon: MonitorPlay, developerOnly: false },
   { id: "agents", label: "Agents", icon: Bot, developerOnly: false },
+  { id: "monitor", label: "Monitor", icon: Activity, developerOnly: false },
   { id: "code", label: "Code", icon: Code2, developerOnly: true },
   { id: "logs", label: "Logs", icon: ScrollText, developerOnly: true },
 ];
@@ -23,7 +25,7 @@ type WorkspaceRightPanelProps = {
   progress: BuildProgress | null;
 };
 
-/** Preview and Agents in both views; Developer view adds Code and Logs. All tabs show the same project. */
+/** Preview, Agents and Monitor in both views; Developer view adds Code and Logs. All tabs show the same project. */
 export default function WorkspaceRightPanel({ project, progress }: WorkspaceRightPanelProps) {
   const [chosenTab, setTab] = useState<Tab>("preview");
   const messages = useMessages(project.id);
@@ -67,6 +69,11 @@ export default function WorkspaceRightPanel({ project, progress }: WorkspaceRigh
       {tab === "agents" && (
         <div id="panel-agents" role="tabpanel" aria-labelledby="tab-agents" className="min-h-0 flex-1">
           <AgentsView project={project} plan={currentPlan} />
+        </div>
+      )}
+      {tab === "monitor" && (
+        <div id="panel-monitor" role="tabpanel" aria-labelledby="tab-monitor" className="min-h-0 flex-1">
+          <MonitorView project={project} plan={approvedPlan} />
         </div>
       )}
       {tab === "code" && (

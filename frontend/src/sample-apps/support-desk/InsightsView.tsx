@@ -1,4 +1,4 @@
-import MiniBarChart from "../shared/MiniBarChart";
+import MiniBarChart from "../../components/MiniBarChart";
 import PageHeader from "../shared/PageHeader";
 import StatCard from "../shared/StatCard";
 import { articles, conversationsPerDay } from "./data";

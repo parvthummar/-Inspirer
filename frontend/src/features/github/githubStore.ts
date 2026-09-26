@@ -22,18 +22,18 @@ export type LinkedRepo = {
   pulled: { sha: string; message: string; author: string; at: string }[];
 };
 
-const ACCOUNT_KEY = "architect.github.account";
+export const GITHUB_ACCOUNT_KEY = "architect.github.account";
 const REPO_PREFIX = "architect.github.repo.";
 
 export function useGitHub(projectId: string) {
-  const [account, setAccount] = useLocalState<GitHubAccount>(ACCOUNT_KEY);
+  const [account, setAccount] = useLocalState<GitHubAccount>(GITHUB_ACCOUNT_KEY);
   const [repo, setRepo] = useLocalState<LinkedRepo>(REPO_PREFIX + projectId);
   return { account, repo, setAccount, setRepo };
 }
 
 /** The connected GitHub account on its own, for places outside a project (like importing). */
 export function useGitHubAccount() {
-  const [account] = useLocalState<GitHubAccount>(ACCOUNT_KEY);
+  const [account] = useLocalState<GitHubAccount>(GITHUB_ACCOUNT_KEY);
   return account;
 }
 

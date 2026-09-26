@@ -1,16 +1,19 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSignup } from "../../api/auth";
+import { useGoogleLogin, useSignup } from "../../api/auth";
 import Alert from "../../components/Alert";
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
 import AuthLayout from "./AuthLayout";
+import GoogleSignInButton from "./GoogleSignInButton";
+import OrDivider from "./OrDivider";
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export default function SignupPage() {
   const navigate = useNavigate();
   const signup = useSignup();
+  const googleLogin = useGoogleLogin();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,6 +41,17 @@ export default function SignupPage() {
         </>
       }
     >
+      {googleLogin.isError && (
+        <div className="mb-4">
+          <Alert>{googleLogin.error.message}</Alert>
+        </div>
+      )}
+      <GoogleSignInButton
+        context="signup"
+        busy={googleLogin.isPending}
+        onCredential={(credential) => googleLogin.mutate(credential, { onSuccess: () => navigate("/", { replace: true }) })}
+      />
+      <OrDivider />
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         {signup.isError && <Alert>{signup.error.message}</Alert>}
         <TextField

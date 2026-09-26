@@ -36,6 +36,8 @@ def _describe_validation_error(error: dict) -> str:
         return "Enter a valid email address."
     if field == "password" and error.get("type") == "string_too_short":
         return "Use at least 8 characters for your password."
+    if field == "name":
+        return "Enter a name."
     if field == "content":
         return "Write a message before sending."
     if field == "feedback":
