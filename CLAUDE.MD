@@ -63,7 +63,7 @@ Backend (`/backend`):
 
 Local development: PostgreSQL runs in Docker via `docker-compose.yml`. Frontend and backend run directly on the machine.
 
-Deployment: frontend on Vercel (root `frontend/`, `vercel.json` proxies `/api/*` to the backend so the login cookie is first-party, and sends other paths to `index.html`), backend on Render (`render.yaml` blueprint; runs `alembic upgrade head` on start), database on Neon. `DATABASE_URL` accepts Neon's `postgresql://...` URL as is (the psycopg driver is added in `config.py`). `FRONTEND_ORIGIN` can list several origins, comma-separated. `VITE_API_URL` stays unset on Vercel.
+Deployment: frontend on Vercel (root `frontend/`, `vercel.json` sends `/api/*` to the `api/proxy.js` function (region cle1, near Render and Neon), which forwards it to the backend so the login cookie is first-party; a plain external rewrite timed out from Vercel's edge; `BACKEND_URL` overrides the Render address, and sends other paths to `index.html`), backend on Render (`render.yaml` blueprint; runs `alembic upgrade head` on start), database on Neon. `DATABASE_URL` accepts Neon's `postgresql://...` URL as is (the psycopg driver is added in `config.py`). `FRONTEND_ORIGIN` can list several origins, comma-separated. `VITE_API_URL` stays unset on Vercel.
 
 ## Folder structure
 
