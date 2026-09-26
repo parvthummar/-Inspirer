@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useLocalState } from "../../lib/localStore";
 
 /**
  * GitHub is a dummy flow: the connected account and each project's repository are kept in the browser.
@@ -24,45 +24,10 @@ export type LinkedRepo = {
 
 const ACCOUNT_KEY = "architect.github.account";
 const REPO_PREFIX = "architect.github.repo.";
-const listeners = new Set<() => void>();
-const cache = new Map<string, unknown>();
-
-function read<T>(key: string): T | null {
-  if (cache.has(key)) return cache.get(key) as T | null;
-  let value: T | null = null;
-  try {
-    const raw = localStorage.getItem(key);
-    value = raw ? (JSON.parse(raw) as T) : null;
-  } catch {
-    value = null;
-  }
-  cache.set(key, value);
-  return value;
-}
-
-function write<T>(key: string, value: T | null) {
-  cache.set(key, value);
-  try {
-    if (value === null) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage may be unavailable; the flow still works for this session.
-  }
-  listeners.forEach((listener) => listener());
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
 
 export function useGitHub(projectId: string) {
-  const account = useSyncExternalStore(subscribe, () => read<GitHubAccount>(ACCOUNT_KEY));
-  const repo = useSyncExternalStore(subscribe, () => read<LinkedRepo>(REPO_PREFIX + projectId));
-
-  const setAccount = useCallback((value: GitHubAccount | null) => write(ACCOUNT_KEY, value), []);
-  const setRepo = useCallback((value: LinkedRepo | null) => write(REPO_PREFIX + projectId, value), [projectId]);
-
+  const [account, setAccount] = useLocalState<GitHubAccount>(ACCOUNT_KEY);
+  const [repo, setRepo] = useLocalState<LinkedRepo>(REPO_PREFIX + projectId);
   return { account, repo, setAccount, setRepo };
 }
 

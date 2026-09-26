@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useMemo } from "react";
+import { useLocalState } from "../../lib/localStore";
 import type { PlanAgent } from "../../api/plans";
 import type { Framework, Memory, Tone, WhenUnsure } from "../../mocks/agentCatalog";
 
 /**
  * Agent settings are a dummy flow: they're kept per project in the browser, not on the server.
- * A small external store lets the Agents and Code tabs share the same data.
+ * The shared local store lets the Agents and Code tabs see the same data.
  */
 
 export type AgentTool = { name: string; enabled: boolean };
@@ -30,8 +31,6 @@ export type AgentWorkspace = {
 };
 
 const STORAGE_PREFIX = "architect.agents.";
-const cache = new Map<string, AgentWorkspace>();
-const listeners = new Set<() => void>();
 
 function agentFromPlan(agent: PlanAgent, index: number): AgentConfig {
   return {
@@ -48,38 +47,11 @@ function agentFromPlan(agent: PlanAgent, index: number): AgentConfig {
   };
 }
 
-function read(projectId: string): AgentWorkspace | null {
-  if (cache.has(projectId)) return cache.get(projectId) ?? null;
-  try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + projectId);
-    const parsed = raw ? (JSON.parse(raw) as AgentWorkspace) : null;
-    if (parsed) cache.set(projectId, parsed);
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function write(projectId: string, workspace: AgentWorkspace) {
-  cache.set(projectId, workspace);
-  try {
-    localStorage.setItem(STORAGE_PREFIX + projectId, JSON.stringify(workspace));
-  } catch {
-    // Storage may be unavailable; the settings still work for this session.
-  }
-  listeners.forEach((listener) => listener());
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
 type PlanSource = { id: string; agents: PlanAgent[] } | null;
 
 /** The project's agents, created from the plan the first time and edited from then on. */
 export function useAgentWorkspace(projectId: string, plan: PlanSource) {
-  const stored = useSyncExternalStore(subscribe, () => read(projectId));
+  const [stored, setStored] = useLocalState<AgentWorkspace>(STORAGE_PREFIX + projectId);
 
   const planId = plan?.id;
   const planAgents = plan?.agents;
@@ -91,9 +63,9 @@ export function useAgentWorkspace(projectId: string, plan: PlanSource) {
 
   const update = useCallback(
     (change: (current: AgentWorkspace) => AgentWorkspace) => {
-      if (workspace) write(projectId, change(workspace));
+      if (workspace) setStored(change(workspace));
     },
-    [projectId, workspace],
+    [setStored, workspace],
   );
 
   return { workspace, update };

@@ -25,9 +25,14 @@ export default {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "drawer-in": {
+          from: { transform: "translateX(24px)", opacity: "0" },
+          to: { transform: "translateX(0)", opacity: "1" },
+        },
       },
       animation: {
         "toast-in": "toast-in 180ms ease-out",
+        "drawer-in": "drawer-in 200ms ease-out",
       },
     },
   },

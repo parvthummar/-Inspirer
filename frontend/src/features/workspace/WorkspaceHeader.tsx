@@ -1,12 +1,10 @@
-import { ArrowLeft, Rocket } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMe } from "../../api/auth";
 import type { Project } from "../../api/projects";
-import { previewUrl } from "../../lib/previewUrl";
 import AccountMenu from "../../components/AccountMenu";
-import Button from "../../components/Button";
 import StatusBadge from "../../components/StatusBadge";
-import Tooltip from "../../components/Tooltip";
+import DeployButton from "../deploy/DeployButton";
 import GitHubButton from "../github/GitHubButton";
 import ProjectNameEditor from "./ProjectNameEditor";
 import ViewModeToggle from "./ViewModeToggle";
@@ -31,19 +29,7 @@ export default function WorkspaceHeader({ project }: { project: Project }) {
       </div>
       <ViewModeToggle project={project} />
       <GitHubButton project={project} />
-      <Tooltip
-        label={
-          project.status === "ready"
-            ? `Your preview is live at ${previewUrl(project.name)}. Production deploys are turned off for this workspace.`
-            : "Deploy becomes available once your app has been built."
-        }
-        align="end"
-      >
-        <Button disabled tabIndex={-1} className="px-3 py-1.5">
-          <Rocket className="h-4 w-4" aria-hidden />
-          Deploy
-        </Button>
-      </Tooltip>
+      <DeployButton project={project} />
       {me.data && <AccountMenu user={me.data} />}
     </header>
   );

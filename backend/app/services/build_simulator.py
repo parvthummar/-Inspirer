@@ -117,10 +117,10 @@ def build_script(project_name: str, plan: dict[str, Any]) -> list[dict[str, Any]
         _step(
             "publish",
             "Publishing your preview",
-            f"Deploying preview to {app_slug[:40]}.architect.app",
+            f"Deploying preview to {app_slug[:40]}-preview.architect.app",
             900,
             1400,
-            ["build frontend (vite) in 3.8s", f"preview live at https://{app_slug[:40]}.architect.app"],
+            ["build frontend (vite) in 3.8s", f"preview live at https://{app_slug[:40]}-preview.architect.app"],
         ),
     ]
     return steps
