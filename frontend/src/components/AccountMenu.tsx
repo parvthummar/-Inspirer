@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { LogOut } from "lucide-react";
+import { Gauge, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLogout, type User } from "../api/auth";
+import UsageDialog from "./UsageDialog";
 
 function initials(name: string): string {
   return name
@@ -14,6 +15,7 @@ function initials(name: string): string {
 
 export default function AccountMenu({ user }: { user: User }) {
   const [open, setOpen] = useState(false);
+  const [usageOpen, setUsageOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const logout = useLogout();
   const navigate = useNavigate();
@@ -58,6 +60,18 @@ export default function AccountMenu({ user }: { user: User }) {
           <button
             type="button"
             role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              setUsageOpen(true);
+            }}
+            className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-ink hover:bg-surface"
+          >
+            <Gauge className="h-4 w-4 text-muted" aria-hidden />
+            Usage and credits
+          </button>
+          <button
+            type="button"
+            role="menuitem"
             disabled={logout.isPending}
             onClick={() => logout.mutate(undefined, { onSuccess: () => navigate("/login", { replace: true }) })}
             className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-ink hover:bg-surface"
@@ -68,6 +82,7 @@ export default function AccountMenu({ user }: { user: User }) {
           {logout.isError && <p className="px-3 pb-2 text-xs text-danger">{logout.error.message}</p>}
         </div>
       )}
+      {usageOpen && <UsageDialog onClose={() => setUsageOpen(false)} />}
     </div>
   );
 }

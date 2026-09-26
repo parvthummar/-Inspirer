@@ -1,8 +1,12 @@
 import { useRef, useState } from "react";
 import { Download } from "lucide-react";
 import { useMe } from "../../api/auth";
+import { useProjects } from "../../api/projects";
 import AppHeader from "../../components/AppHeader";
 import Button from "../../components/Button";
+import GettingStarted from "../onboarding/GettingStarted";
+import { useOnboarding } from "../onboarding/useOnboarding";
+import WelcomeDialog from "../onboarding/WelcomeDialog";
 import ImportProjectModal from "./ImportProjectModal";
 import ProjectList from "./ProjectList";
 import PromptComposer, { type PromptComposerHandle } from "./PromptComposer";
@@ -13,6 +17,10 @@ export default function DashboardPage() {
   const composerRef = useRef<PromptComposerHandle>(null);
   const [importOpen, setImportOpen] = useState(false);
   const firstName = me.data?.name.split(" ")[0];
+  const projects = useProjects();
+  const onboarding = useOnboarding(me.data?.id ?? "anonymous");
+  // The tour is for people who haven't built anything yet.
+  const showWelcome = !onboarding.welcomeSeen && projects.data?.length === 0;
 
   return (
     <div className="min-h-full">
@@ -38,12 +46,28 @@ export default function DashboardPage() {
         </section>
 
         <div className="space-y-12">
+          {projects.data && !onboarding.checklistHidden && (
+            <GettingStarted
+              projects={projects.data}
+              onDescribe={() => composerRef.current?.fill("")}
+              onHide={onboarding.hideChecklist}
+            />
+          )}
           <ProjectList onStartNew={() => composerRef.current?.fill("")} />
           <StarterTemplates onPick={(template) => composerRef.current?.fill(template.prompt)} />
         </div>
       </main>
 
       {importOpen && <ImportProjectModal onClose={() => setImportOpen(false)} />}
+      {showWelcome && (
+        <WelcomeDialog
+          firstName={firstName ?? "there"}
+          onFinish={() => {
+            onboarding.markWelcomeSeen();
+            composerRef.current?.fill("");
+          }}
+        />
+      )}
     </div>
   );
 }

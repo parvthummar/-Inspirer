@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useMe } from "../api/auth";
 import AccountMenu from "./AccountMenu";
+import CreditsMeter from "./CreditsMeter";
 import Logo from "./Logo";
 
 export default function AppHeader() {
@@ -11,7 +12,12 @@ export default function AppHeader() {
         <Link to="/" className="rounded-md">
           <Logo />
         </Link>
-        {me.data && <AccountMenu user={me.data} />}
+        {me.data && (
+          <div className="flex items-center gap-3">
+            <CreditsMeter />
+            <AccountMenu user={me.data} />
+          </div>
+        )}
       </div>
     </header>
   );

@@ -144,6 +144,9 @@ Checkpoints:
 - `POST /api/projects/{id}/checkpoints/restore` body: message_id. Removes every message and plan version after that message and restores the project snapshot stored on it (messages have `has_checkpoint`).
 - `POST /api/projects/{id}/edits` body: element, instruction, change, file. Saves a click-to-edit change as a chat exchange (no AI call); requires status "ready".
 
+Usage:
+- `GET /api/usage` returns credits used this month (plans 5, chat replies 1, builds 10; Starter plan 500 credits, resets on the 1st), with a breakdown by kind and by project.
+
 ## OpenAI usage
 
 - All OpenAI calls live in `backend/app/services/openai_service.py`. Routers never call OpenAI directly.
@@ -282,3 +285,5 @@ The product is a workspace people stay in for hours, so the UI should feel calm 
 - [x] Phase 2: import project. Dashboard modal: choose source (GitHub link or your repos when GitHub is connected, zip, Lovable/Bolt/Replit/v0 export), simulated analysis, then a "Here's what I understood" review (plain summary, pages, agents, services, things to know, collapsible stack/files/languages, editable name). Importing creates a real project whose first message is built from the summary, so the plan continues the app.
 - [x] Phase 2: checkpoints (real). Messages store a snapshot of project state (`messages.snapshot`, migration `9ef303305319`) whenever Architect posts one; "Restore to here" on hover in the chat, with confirmation, removes later messages and plan versions and restores status, name, template, build and plan statuses. Agent settings, GitHub and deploy state (browser-only) are not rolled back.
 - [x] Phase 2: click-to-edit in the preview. "Click to edit" toggle in the browser frame; hover outlines elements with a name, click opens a popover. Text, colour, size, bold, rounded and hide are applied instantly (DOM overrides kept per project in the browser, tied to the chat message so checkpoint restores undo them) and confirmed in chat via `POST /edits`; other requests go to Architect as a normal chat message with the element as context.
+- [x] Phase 3: usage and credits meter. Real usage counted from the database (`usage_service.py`); credits left and a bar in the dashboard header (red from 80%), "Usage and credits" in the account menu; dialog with breakdown, per-project bars and plans (upgrade is a request, no payment).
+- [x] Phase 3: onboarding. Three-step welcome tour for users with no projects (ends in the prompt box), and a dismissible "Getting started" checklist on the dashboard ticked off from real project data. Flags kept per user in the browser.
